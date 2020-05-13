@@ -30,7 +30,9 @@ REAL(Kind=4) ::  U(N,M,0:1),&
                & DIFF_U(N,M), &
                & DIFF_V(N,M), &
                & Velfx(N,M),  &
-               & Velfy(N,M)
+               & Velfy(N,M),  &
+               & QXS(N,M),    &
+               & QYS(N,M)
 
 REAL(Kind=4) :: MGH1IHX(M),  &
                & MGH2IHY(M),  &
@@ -473,12 +475,19 @@ CALL XBC_23(DHX2Y_23,N,M)
 
 !CONDITIONS OF THE INITIAL STATE ***********************************
 
-
-CALL TOPOGR(P0_HP,X_23,Y_23,N,M, mountain)
+If (IRHW.EQ.2)then
+  CALL TOPOGR(P0_HP,X_23,Y_23,N,M, mountain)
+elseif (IRHW.EQ.3)then
+  CALL EARTHTOPO(P0_HP,X_23,Y_23,N,M)
+  CALL SMOOTHTOP(P0_HP,PC,IP,N,M)
+else
+  P0_HP(:,:)=0.0
+endif
 
 IF(IRHW.EQ.0) CALL INITZON(U_23,V_23,PT_HP,COR_23,X_23,Y_23,N,M,F0_23,BETA_23,H00_23,R_23,PVEL_23)
 IF(IRHW.EQ.1) CALL INITRHW(U_23,V_23,PT_HP,COR_23,X_23,Y_23,N,M,F0_23,R_23)
 IF(IRHW.EQ.2) CALL INITZON(U_23,V_23,PT_HP,COR_23,X_23,Y_23,N,M,F0_23,BETA_23,H00_23,R_23,PVEL_23)
+IF(IRHW.EQ.3) CALL INITZON(U_23,V_23,PT_HP,COR_23,X_23,Y_23,N,M,F0_23,BETA_23,H00_23,R_23,PVEL_23)
 
 If (QRelax) then
 CALL POLARABS(Alp_REL,Y_23,DT_23,N,M)
@@ -498,6 +507,9 @@ IF(IRST.EQ.0) THEN
 
       QX_HP(I,J)=PD_HP(I,J)*U_23(I,J)
       QY_HP(I,J)=PD_HP(I,J)*V_23(I,J)
+
+      QXS(I,J)=QX_HP(I,J)
+      QYS(I,J)=QY_HP(I,J)
 
     end do
 
@@ -775,7 +787,13 @@ IF(IANAL.EQ.0) THEN
     IF(IRHW==1) then
            
       CALL RHWT(U0,V0,PT0,PD0,P0,COR_23,X_23,Y_23,N,M,F0_23,R_23,KT*DT_23)
-
+       DO J=1,M
+        DO I=1,N
+         QXS(I,J)=U0(I,J)*PD0(I,J)
+         QYS(I,J)=V0(I,J)*PD0(I,J)
+        ENDDO
+       enddo 
+      ENDIF
     else
       write(*,*) 'relaxation values not defined'
     endif
@@ -785,11 +803,11 @@ IF(IANAL.EQ.0) THEN
     DO J=1,M
       DO I=1,N
         UA(I,J)=QX(I,J)+rpe_05*(rpe_2*E1(I,J,0)-E1(I,J,-1)) &
-                     & +rpe_05*Alp_REL(I,J)*U0(I,J)*PD0(I,J)
+                     & +rpe_05*Alp_REL(I,J)*QXS(I,J)
         !write(*,*) 'F1',I,ALP_REL(I,J), rpe_05*Alp_REL(I,J)*U0(I,J)*PD0(I,J), QX(I,J) &
         !        & ,U0(I,J),PD0(I,J)
         VA(I,J)=QY(I,J)+rpe_05*(rpe_2*E2(I,J,0)-E2(I,J,-1))&
-                     & +rpe_05*Alp_REL(I,J)*V0(I,J)*PD0(I,J)
+                     & +rpe_05*Alp_REL(I,J)*QYS(I,J)
         !write(*,*) 'F1',I,ALP_REL(I,J), rpe_05*Alp_REL(I,J)*V0(I,J)*PD0(I,J), QY(I,J) &
         !        & ,V0(I,J),PD0(I,J)
         !read(*,*)
@@ -845,11 +863,11 @@ IF(IANAL.EQ.0) THEN
       end do
     end do
 
-    CALL PRFORC(PT,E1(:,:,0),E2(:,:,0),PD,F2(:,:,1), &     !t^n estimate, O(dt/2)
-            &   F1(:,:,0),F2(:,:,0),HX,HY,COR,N,M,IP,GC1,GC2,0,0)
-
-   ! CALL PRFORC(PC,E1(:,:,0),E2(:,:,0),PD,F2(:,:,1), &      !t^{n+1}, fully O(dt^2)
+   ! CALL PRFORC(PT,E1(:,:,0),E2(:,:,0),PD,F2(:,:,1), &     !t^n estimate, O(dt/2)
    !         &   F1(:,:,0),F2(:,:,0),HX,HY,COR,N,M,IP,GC1,GC2,0,0)
+
+    CALL PRFORC(PC,E1(:,:,0),E2(:,:,0),PD,F2(:,:,1), &      !t^{n+1}, fully O(dt^2)
+            &   F1(:,:,0),F2(:,:,0),HX,HY,COR,N,M,IP,GC1,GC2,0,0)
 
    
   ! end gcrtest1
@@ -996,6 +1014,13 @@ QY_old(:,:)=QY(:,:)
 
     CALL PRFC0(PT,F1(:,:,0),F2(:,:,0),PD,HX,HY,IP,IPS,GH1,GH2,EP,N,M)
     
+    IF(IRHW.EQ.-1) THEN
+      CALL SMOOTHSTATE(QX,QXS,E1(1,1,0),E2(1,1,0),IP,-1.,KT,N,M)
+      CALL SMOOTHSTATE(QY,QYS,E1(1,1,0),E2(1,1,0),IP,-1.,KT,N,M)
+!     CALL POLARFILT(QX,HX,HY,FZ,SCR,N,M)
+!     CALL POLARFILT(QY,HX,HY,FZ,SCR,N,M)
+    ENDIF
+
     DO J=1,M
       DO I=1,N
         E1(I,J,0)=-DHX2Y(I,J)*QX(I,J)*QY(I,J)/PD(I,J)
@@ -1008,16 +1033,16 @@ QY_old(:,:)=QY(:,:)
     DO J=1,M
       DO I=1,N
         F1(I,J,0)=F1(I,J,0)+COR(I,J)*QY(I,J)+E1(I,J,0)     &
-                   &       -ALP_REL(I,J)*(QX(I,J)-U0(I,J)*PD0(I,J))
+                   &       -ALP_REL(I,J)*(QX(I,J)-QXS(I,J))
         if(kt>2 .and. J>=M-1) then
         write(*,*)kt, J
-        write(*,*) 'F1',I,ALP_REL(I,J), -ALP_REL(I,J)*(QX(I,J)-U0(I,J)*PD0(I,J)), QX(I,J) &
+        write(*,*) 'F1',I,ALP_REL(I,J), -ALP_REL(I,J)*(QX(I,J)-QXS(I,J)), QX(I,J) &
                 & ,U0(I,J),PD0(I,J), PD(I,J), PT(I,J)
         endif
         F2(I,J,0)=F2(I,J,0)-COR(I,J)*QX(I,J)+E2(I,J,0)     &
-                   &       -ALP_REL(I,J)*(QY(I,J)-V0(I,J)*PD0(I,J))
+                   &       -ALP_REL(I,J)*(QY(I,J)-QYS(I,J))
         if(kt>2 .and. J>=M-1) then
-        write(*,*) 'F2',I,ALP_REL(I,J), -ALP_REL(I,J)*(QY(I,J)-V0(I,J)*PD0(I,J)), QY(I,J) &
+        write(*,*) 'F2',I,ALP_REL(I,J), -ALP_REL(I,J)*(QY(I,J)-QYS(I,J)), QY(I,J) &
                 & ,V0(I,J),PD0(I,J)
         read(*,*)
         endif
@@ -4870,16 +4895,18 @@ REAL(Kind=4) :: eps, pi, abswidth, atau, alpha, &
        & ymax, ymin, absy0_north, absy0_south, y0, y1, y2
 INTEGER :: I, J
 
-! DO J=1,M
-! DO I=1,N
-!  ALP(I,J)=DT*0.
-! ENDDO
-! ENDDO
+ DO J=1,M
+ DO I=1,N
+  ALP(I,J)=DT*0.
+ ENDDO
+ ENDDO
 
-eps=1.e-30
+eps=1.e-10
 pi=acos(-1.)
-abswidth=pi/64.*3!2.
-atau=2.*DT
+abswidth=pi/64.*3   !RHW4
+!     atau=2.*(9.*2.*DT)
+atau=200.*(2.*DT) ! RHW4
+!     atau=2.*DT    !Zonal flow past Earth orography
 alpha=1./atau
 
 ymax = 0.5*pi
@@ -4899,7 +4926,7 @@ do j=1,m
 !       if (y0 > 0.) y1 = exp(-(ymax-y0)/abswidth)
 !       if (y0 < 0.) y2 = exp(-(y0-ymin)/abswidth)
     do i=1,n
-      alp(i,j) = alpha*((y1**2+y2**2)/(y1+y2+eps))
+      alp(i,j) = DT*alpha*((y1**2+y2**2)/(y1+y2+eps))
     enddo
    
 
@@ -4908,4 +4935,142 @@ enddo
 
 
 end subroutine
+
+SUBROUTINE SMOOTHSTATE(FL,FLS,SCR1,SCR2,IP,FLIP,KT,N,M)
+implicit none
+REAL(Kind=4) :: FL(N,M),FLS(N,M),SCR1(N,M),SCR2(N,M)
+REAL(Kind=4) :: FLIP
+INTEGER ;; N,M, KT, IP(N)
+
+integer :: i,j
+integer :: IFLG, KITER, kit
+
+      IFLG=1
+      KITER=1
+
+      IF(IFLAG.EQ.0) THEN
+      do kit=1,kiter
+      do j=1,m
+        do i=2,n-1
+         scr1(i,j)=0.25*(fl(i+1,j)+2.*fl(i,j)+fl(i-1,j))
+        enddo
+         scr1(1,j)=scr1(n-1,j)
+         scr1(n,j)=scr1(2,j)
+      enddo
+      do j=2,m-1
+      do i=1,n
+        scr2(i,j)=0.25*(scr1(i,j+1)+2.*scr1(i,j)+scr1(i,j-1))
+      enddo
+      enddo
+      do i=1,n
+        scr2(i,1)=0.25*(scr1(i,2)+2.*scr1(i,1)+flip*scr1(ip(i),1))
+        scr2(i,m)=0.25*(flip*scr1(ip(i),m)+2.*scr1(i,m)+scr1(i,m-1))
+      enddo
+      enddo
+      DO J=1,M
+      DO I=1,N
+       FLS(I,J)=SCR2(I,J)
+      ENDDO
+      ENDDO
+      ENDIF
+
+      IF(IFLG.EQ.1) THEN
+       DO J=1,M
+       DO I=1,N
+        FLS(I,J)=(FLS(I,J)*KT+SCR2(I,J))/(KT+1)
+       ENDDO
+       ENDDO
+      ENDIF
+
+     END subroutine
+
+     subroutine Earthtopo(h0,x,y,n,m)
+implicit none
+      REAL(Kind=4) :: h0(n,m),x(n),y(m)
+      REAL(Kind=4) :: tp0(512,256),flon,flat, pi
+      integer :: n,m, jj, ii, i ,j
+
+      pi = acos(-1.)
+
+      do jj=1,m
+        do ii=2,n-1
+          read(33,*) i,j,flon,flat,tp0(i,j)
+
+!     print*, i,j,flon,flat,tp0(i,j)
+          h0(i,j)=tp0(i,j)
+        enddo
+      enddo
+      call xbc(h0,n,m)
+
+      h0mx=-1.e15
+      h0mn= 1.e15
+      do j=1,m
+        do i=1,n
+         h0mx=maxval(h0mx,h0(i,j))
+         h0mn=minval(h0mn,h0(i,j))
+        enddo
+      enddo
+      print*, h0mx,h0mn
+
+      cycmx1=-1.e15
+      cycmxn=-1.e15
+      do j=1,m
+        cycmx1=amax1(cycmx1,abs(h0(1,j)-h0(n-1,j)))
+        cycmxn=amax1(cycmxn,abs(h0(2,j)-h0(n,j)))
+      enddo
+      print*, cycmx1, cycmxn
+
+      end subroutine
+
+      SUBROUTINE SMOOTHTOP(FL,SCR,IP,N,M)
+      implicit none
+      REAL(Kind=4) :: FL(N,M),SCR(N,M)
+      INTEGER :: IP(N), N, M
+
+      INTEGER :: kiter, kit, I, J
+
+      KITER=1
+
+      DO KIT=1,KITER
+        do j=1,m
+         do i=2,n-1
+          scr(i,j)=0.25*(fl(i+1,j)+2.*fl(i,j)+fl(i-1,j))
+         enddo
+          scr(1,j)=scr(n-1,j)
+          scr(n,j)=scr(2,j)
+        enddo
+        do j=2,m-1
+         do i=1,n
+          fl(i,j)=0.25*(scr(i,j+1)+2.*scr(i,j)+scr(i,j-1))
+         enddo
+        enddo
+        do i=1,n
+         fl(i,1)=0.25*(scr(i,2)+2.*scr(i,1)+scr(ip(i),1))
+         fl(i,m)=0.25*(scr(ip(i),m)+2.*scr(i,m)+scr(i,m-1))
+        enddo
+      ENDDO
+
+      h0mx=-1.e15
+      h0mn= 1.e15
+      do j=1,m
+       do i=1,n
+        h0mx=maxval(h0mx,fl(i,j))
+        h0mn=minval(h0mn,fl(i,j))
+       enddo
+      enddo
+      print*, h0mx,h0mn
+      
+      h0mx=-1.e15
+      h0mn= 1.e15
+      do j=1,m
+       do i=1,n
+        fl(i,j)=1.289678*fl(i,j)
+        h0mx=maxval(h0mx,fl(i,j))
+        h0mn=minval(h0mn,fl(i,j))
+       enddo
+      enddo
+      print*, h0mx,h0mn
+
+      END subroutine
+
 
