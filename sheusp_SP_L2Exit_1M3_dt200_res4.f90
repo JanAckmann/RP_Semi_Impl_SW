@@ -214,7 +214,7 @@ do ID_PREC=0,0,-5
    write(Dp_depth_str,*) DP_Depth
 
   !ID_PREC=0
-   EXP_NAME= 'data/PiotrV3_ADI_L2_1M3_SP_D'//trim(adjustl(Dp_depth_str))//'_PolAbs_dt200_res4'
+   EXP_NAME= 'data/sheusp_SP_L2Exit_1M3_dt200_res4'
   ! EXP_NAME= 'data_ADI_Precon_init23'
 
 
@@ -270,17 +270,17 @@ NPRINT =int(2*797)!864
 DT_23=100.0d0
 KMX=4
 mpfl=999999
-elseif(IRHW==1)
+elseif(IRHW==1) then
 !DATA NT,NPRINT/12096,864/
 NT = 6376 !int(6376*(200.0/240.0)) !12960  
 NPRINT =797 !797 !int(797*(200.0/240.0)) !864
 DT_23=200.0d0
 KMX=4
 mpfl=999999
-elseif(IRHW==3)
+elseif(IRHW==3) then
 !DATA NT,NPRINT/12096,864/
 NT = 6376 !int(6376*(200.0/240.0)) !12960  
-NPRINT =797 !797 !int(797*(200.0/240.0)) !864
+NPRINT = 797 !797 !797 !int(797*(200.0/240.0)) !864
 DT_23=200.0d0
 KMX=4
 mpfl=999999
@@ -321,6 +321,10 @@ if (IRHW==2) then
   H00_23   = 5960.0d0 
   HMTS_23  = 1.0d0 
 !
+elseif(IRHW==3) then
+USCAL_23 = 20.!Piotrs new numbers old !5.0d0
+H00_23  = 8.E3
+  HMTS_23  = 1.0 
   endif
 
 USCAL=USCAL_23
@@ -802,9 +806,8 @@ IF(IANAL.EQ.0) THEN
        enddo 
       ENDIF
     else
-      write(*,*) 'relaxation values not defined'
+      !write(*,*) 'relaxation values not defined'
     endif
-   endif
 
 !--->                CORIOLIS AND METRIC FORCES
     DO J=1,M
@@ -890,7 +893,7 @@ IF(IANAL.EQ.0) THEN
        &  EXP_NAME, iprint, num_of_bits, DP_Depth, Alp_REL)
 
      !! go back to REAL(Kind=4) outside of the solver
-
+     !  read(*,*)
  If(save_time) exit  ! if iteration counter has reached 100 once, jump to next set of bits
   
    
@@ -1041,18 +1044,18 @@ QY_old(:,:)=QY(:,:)
       DO I=1,N
         F1(I,J,0)=F1(I,J,0)+COR(I,J)*QY(I,J)+E1(I,J,0)     &
                    &       -ALP_REL(I,J)*(QX(I,J)-QXS(I,J))
-        if(kt>2 .and. J>=M-1) then
-        write(*,*)kt, J
-        write(*,*) 'F1',I,ALP_REL(I,J), -ALP_REL(I,J)*(QX(I,J)-QXS(I,J)), QX(I,J) &
-                & ,U0(I,J),PD0(I,J), PD(I,J), PT(I,J)
-        endif
+        !if(kt>2 .and. J>=M-1) then
+        !write(*,*)kt, J
+        !write(*,*) 'F1',I,ALP_REL(I,J), -ALP_REL(I,J)*(QX(I,J)-QXS(I,J)), QX(I,J) &
+        !        & ,U0(I,J),PD0(I,J), PD(I,J), PT(I,J)
+        !endif
         F2(I,J,0)=F2(I,J,0)-COR(I,J)*QX(I,J)+E2(I,J,0)     &
                    &       -ALP_REL(I,J)*(QY(I,J)-QYS(I,J))
-        if(kt>2 .and. J>=M-1) then
-        write(*,*) 'F2',I,ALP_REL(I,J), -ALP_REL(I,J)*(QY(I,J)-QYS(I,J)), QY(I,J) &
-                & ,V0(I,J),PD0(I,J)
-        read(*,*)
-        endif
+        !if(kt>2 .and. J>=M-1) then
+        !write(*,*) 'F2',I,ALP_REL(I,J), -ALP_REL(I,J)*(QY(I,J)-QYS(I,J)), QY(I,J) &
+        !        & ,V0(I,J),PD0(I,J)
+        !read(*,*)
+        !endif
       end do
     end do
 
@@ -1212,7 +1215,7 @@ INTEGER :: I, J
 DO J=1,M
   DO I=1,N
     COR(I,J)=F0*(-COS(X(I))*COS(Y(J))*SIN(BETA)+SIN(Y(J))*COS(BETA))
-    PT(I,J)=H00-R**2.0d0*(F0+Q)*0.5d0*Q*  &
+    PT(I,J)=H00-R**2.0*(F0+Q)*0.5*Q*  &
       &     (-COS(X(I))*COS(Y(J))*SIN(BETA)+SIN(Y(J))*COS(BETA))**2
   end do
 end do
@@ -1286,24 +1289,48 @@ INTEGER :: IPS, N, M
 REAL(Kind=4) :: GP, GN
 INTEGER :: I, J
 
-DO I=2,N-1
+    DO I=2,N-1
+       DO  J=1,M
+      GP=PD(I+1,J)/(PD(I+1,J)+PD(I-1,J)+EP)*2.*IPS+(1-IPS)
+      GN=PD(I-1,J)/(PD(I+1,J)+PD(I-1,J)+EP)*2.*IPS+(1-IPS)
+      F1(I,J)=-GH1*PD(I,J)/HX(I,J)* &
+           & ( GP*(A(I+1,J)-A(I,J))+GN*(A(I,J)-A(I-1,J)) )
+      enddo
+      DO J=2,M-1
+      GP=PD(I,J+1)/(PD(I,J+1)+PD(I,J-1)+EP)*2.*IPS+(1-IPS)
+      GN=PD(I,J-1)/(PD(I,J+1)+PD(I,J-1)+EP)*2.*IPS+(1-IPS)
+      F2(I,J)=-GH2*PD(I,J)/HY(I,J)* &
+          & ( GP*(A(I,J+1)-A(I,J))+GN*(A(I,J)-A(I,J-1)) )
+      enddo
+      GP=PD(I    ,2)/(PD(I,2)+PD(IP(I),1)+EP)*2.*IPS+(1-IPS)
+      GN=PD(IP(I),1)/(PD(I,2)+PD(IP(I),1)+EP)*2.*IPS+(1-IPS)
+      F2(I,1)=-GH2*PD(I,1)/HY(I,1)* &
+        &  ( GP*(A(I,2)-A(I,1))+GN*(A(I,1)-A(IP(I),1)) )
 
-  DO J=1,M
-    F1(I,J)=-GH1*PD(I,J)/HX(I,J)*                          &
-       & (A(I+1,J)-A(I-1,J))
-  end do    
+      GP=PD(IP(I),M)/(PD(IP(I),M)+PD(I,M-1)+EP)*2.*IPS+(1-IPS)
+      GN=PD(I  ,M-1)/(PD(IP(I),M)+PD(I,M-1)+EP)*2.*IPS+(1-IPS)
+      F2(I,M)=-GH2*PD(I,M)/HY(I,M)*& 
+           &  ( GP*(A(IP(I),M)-A(I,M))+GN*(A(I,M)-A(I,M-1)) )
+    enddo
 
-  DO J=2,M-1
-    F2(I,J)=-GH2*PD(I,J)/HY(I,J)*                          &
-     &  (A(I,J+1)-A(I,J-1)) 
-  end do  
-
-  F2(I,1)=-GH2*PD(I,1)/HY(I,1)*                            &
-     &  (A(I,2)-A(IP(I),1)) 
-
-  F2(I,M)=-GH2*PD(I,M)/HY(I,M)*                            &
-     &  (A(IP(I),M)-A(I,M-1)) 
-end do
+!DO I=2,N-1
+!
+!  DO J=1,M
+!    F1(I,J)=-GH1*PD(I,J)/HX(I,J)*                          &
+!       & (A(I+1,J)-A(I-1,J))
+!  end do    
+!
+!  DO J=2,M-1
+!    F2(I,J)=-GH2*PD(I,J)/HY(I,J)*                          &
+!     &  (A(I,J+1)-A(I,J-1)) 
+!  end do  
+!
+!  F2(I,1)=-GH2*PD(I,1)/HY(I,1)*                            &
+!     &  (A(I,2)-A(IP(I),1)) 
+!
+!  F2(I,M)=-GH2*PD(I,M)/HY(I,M)*                            &
+!     &  (A(IP(I),M)-A(I,M-1)) 
+!end do
  
 CALL XBC(F1,N,M)
 CALL XBC(F2,N,M)
@@ -1737,7 +1764,45 @@ end do
 
 END SUBROUTINE
 
+SUBROUTINE LAP0_Piotr(A11,A12,A21,A22,B11,B22,    &
+     &          PB,P0,E1,E2,HX,HY,COR,ALP_rel,N,M,GC1,GC2)
+use implicit_functions_SP
 
+implicit none
+REAL(Kind=4) :: A11(N,M),A12(N,M),A21(N,M),A22(N,M),B11(N,M),B22(N,M),  &
+     &      PB(N,M),P0(N,M),E1(N,M),E2(N,M),HX(N,M),HY(N,M),COR(N,M), &
+     &      ALP_rel(N,M)
+REAL(Kind=4) :: GC1, GC2, DETI, AMM, GMM
+INTEGER :: N, M
+
+
+REAL(Kind=4) :: GH1, GH2, C1, C2,  A, B, C, D
+INTEGER :: I, J
+
+
+      GH1=.5*GC1
+      GH2=.5*GC2
+
+DO J=1,M
+  DO I=1,N
+      C1=-GH1/HX(I,J)*(P0(I,J)-PB(I,J))
+      C2=-GH2/HY(I,J)*(P0(I,J)-PB(I,J))
+      GMM=.5*COR(I,J)
+      AMM=1.+.5*ALP_rel(I,J)
+      DETI=1./(AMM**2+GMM**2)
+      A=AMM*DETI
+      B=GMM*DETI
+      A11(I,J)=-C1*A*GH1*HY(I,J)*.5
+      A12(I,J)=-C2*B*GH1*HY(I,J)*.5
+      A22(I,J)= C1*B*GH2*HX(I,J)*.5
+      A21(I,J)=-C2*A*GH2*HX(I,J)*.5
+      B11(I,J)=-   A*GH1*E1(I,J)*HY(I,J)*.5 &
+      &        -   B*GH1*E2(I,J)*HY(I,J)*.5
+      B22(I,J)=-   A*GH2*E2(I,J)*HX(I,J)*.5 &
+      &        +   B*GH2*E1(I,J)*HX(I,J)*.5
+  end do
+ENDDO
+end subroutine
 
 SUBROUTINE LAP0(A11,A12,A21,A22,B11,B22,    &
      &          PB,P0,E1,E2,HX,HY,COR,N,M,GC1,GC2)
@@ -3031,7 +3096,7 @@ avg_time=sum_time/MAX(ICOUNT,1)
 avg_lp_time=sum_lp_time/MAX(ICOUNT,1)
 NITAV=float(NITSM)/MAX(ICOUNT,1)
 
-      write(*,*) 'ERROR:', ERROR,'NITER, NITAV (GCR ITERATIONS): ',NITER,NITAV
+      write(*,*) 'ERROR:', ERROR,'NITER, NITAV (GCR): ',NITER,NITAV
 !  303 FORMAT(4X,'ERROR:',E11.4,1X,'NITER, NITAV (GCR ITERATIONS):',2I4)
       write(*,*) 'Computing time per implicit solve, low precision:', avg_time, avg_lp_time
 
@@ -3298,6 +3363,7 @@ LOGICAL :: codesQ, exiting
 
 INTEGER :: IRHW , counter
 
+double precision :: err0_dp
 ps(:,:)=0.0d0
 divi(:,:)=0.0d0
 
@@ -3365,12 +3431,12 @@ lowprectime=lowprectime + endLP-startLP
   !! should be 23
 
 !! matrix entries
-!call lap0(a11,a12,a21,a22,b11,b22,                   &
-!     &          pb,p0,e1,e2,hx,hy,cor,n1,n2,gc1,gc2)
-call lap0_depth(a11,a12,a21,a22,b11,b22,                   &
-     &          pb,p0,e1,e2,hx,hy,cor,n1,n2,gc1,gc2, &
-           &    MGH1IHX, MGH2IHY, AC, BC, AD, BD,  &
-           & DP_Depth)
+call LAP0_Piotr(a11,a12,a21,a22,b11,b22,                   &
+     &          pb,p0,e1,e2,hx,hy,cor,ALP_rel,n1,n2,gc1,gc2)
+!call lap0_depth(a11,a12,a21,a22,b11,b22,                   &
+!     &          pb,p0,e1,e2,hx,hy,cor,n1,n2,gc1,gc2, &
+!           &    MGH1IHX, MGH2IHY, AC, BC, AD, BD,  &
+!           & DP_Depth)
 
   !! should be 23
      ! Preconditioning: init
@@ -3397,17 +3463,19 @@ endif
 !! calculate initial residual
 call cpu_time(startLP)
  !! should be 23
+err0_dp=0.0d0
 err0=0.0d0
  DO J=1,n2
    DO I=1,n1
  
     r_HP(I,J)=rpe_05*r_HP(I,J)-(p(I,J)-b(I,J))
       err0=err0+r_HP(I,J)*r_HP(I,J)
-    write(*,*) I, J, r_HP(I,J), p(I,J),b(I,J),err0 &
-          &,E1(I,J), E2(I,j), pb(I,J), p0(I, J)
+      err0_dp=err0_dp+r_HP(I,J)*r_HP(I,J)
+    !write(*,*) I, J, r_HP(I,J), p(I,J),b(I,J),err0 &
+    !      &,E1(I,J), E2(I,j), pb(I,J), p0(I, J)
 
    enddo
-    read(*,*)
+    !read(*,*)
  enddo
 
 
@@ -3432,22 +3500,11 @@ call cpu_time(start)
 !err0=0.0d0
 
 
-
-counter=0
-DO J=1,n2
-
-  DO I=1,n1
-     counter=counter+1
-      err0=err0+r_HP(I,J)*r_HP(I,J)
-    !  write(*,*) J,I, r_HP(I,J)*r_HP(I,J), err0
-    ! !
-    !   read(*,*)
-  enddo
-  !write(*,*) J,r_HP(n1,J)*r_HP(n1,J), err0
-enddo
-       write(*,*)err0, counter
-       read(*,*)
     err0=sqrt(err0)
+    err0_dp=sqrt(err0_dp)
+      ! write(*,*)err0, err0_dp, abs(err0 -err0_dp)/err0_dp, counter
+      ! read(*,*)
+
     errnm1=err0
 
 !! should be num_of_bits
@@ -3680,8 +3737,8 @@ endif
 
     errn=sqrt(errn)
    write(*,*) niter, errn, err0
-read(*,*)
-    if(errn.lt.eps*err0 .and. it .ge. itmn) exiting=.true.
+   !read(*,*)
+    if(errn.lt.eps*err0 .and. it > itmn) exiting=.true.
     if(errn.ge.errnm1) exiting=.true.
     errnm1=errn
 !if(maxval(ABS(r_HP(:,:))) .lt. eps*Exit_cond) exit
@@ -3816,14 +3873,13 @@ lowprectime=lowprectime + endLP-startLP
 
     endif
 
+
+  if(exiting .eqv. .true.) exit
  
   enddo
 
-  if(exiting .eqv. .true.) then !! to replace the go to 200
-    
-    exit
+  if(exiting .eqv. .true.) exit !! to replace the go to 200
 
-  end if
 
 end do
 !write(*,*) niter
@@ -3874,13 +3930,14 @@ write(*,*) niter
  write(*,*) 'truth ACC',sqrt(err_true/err0_true),'max(rtrue)' ,&
            & maxval(ABS(r_true(:,:))),'max(r0true)', maxval(ABS(r0_true(:,:))), 'max(r)',maxval(ABS(r_HP(:,:))),&
            &'max(r0)',err0 , 'EXIT', eps*Exit_cond 
+
 endif
 
 call cpu_time(finish)
 !write(*,*) niter
-!read(*,*)
+
 icount=icount+1
-write(*,*) 'iterations', niter
+!write(*,*) 'iterations', niter
 nitsm=nitsm+niter
 sum_time=sum_time+(finish-start)
 sum_lp_time=sum_lp_time+lowprectime
@@ -4912,7 +4969,7 @@ eps=1.e-10
 pi=acos(-1.)
 abswidth=pi/64.*3   !RHW4
 !     atau=2.*(9.*2.*DT)
-atau=200.*(2.*DT) ! RHW4
+atau=(2.*DT) ! RHW4
 !     atau=2.*DT    !Zonal flow past Earth orography
 alpha=1./atau
 
@@ -4947,7 +5004,7 @@ SUBROUTINE SMOOTHSTATE(FL,FLS,SCR1,SCR2,IP,FLIP,KT,N,M)
 implicit none
 REAL(Kind=4) :: FL(N,M),FLS(N,M),SCR1(N,M),SCR2(N,M)
 REAL(Kind=4) :: FLIP
-INTEGER ;; N,M, KT, IP(N)
+INTEGER :: N,M, KT, IP(N)
 
 integer :: i,j
 integer :: IFLG, KITER, kit
@@ -4955,7 +5012,7 @@ integer :: IFLG, KITER, kit
       IFLG=1
       KITER=1
 
-      IF(IFLAG.EQ.0) THEN
+      IF(IFLG.EQ.0) THEN
       do kit=1,kiter
       do j=1,m
         do i=2,n-1
@@ -4997,6 +5054,8 @@ implicit none
       REAL(Kind=4) :: tp0(512,256),flon,flat, pi
       integer :: n,m, jj, ii, i ,j
 
+      REAL(Kind=4) :: h0mx, h0mn, cycmx1, cycmxn
+
       pi = acos(-1.)
 
       do jj=1,m
@@ -5013,8 +5072,8 @@ implicit none
       h0mn= 1.e15
       do j=1,m
         do i=1,n
-         h0mx=maxval(h0mx,h0(i,j))
-         h0mn=minval(h0mn,h0(i,j))
+         h0mx=max(h0mx,h0(i,j))
+         h0mn=min(h0mn,h0(i,j))
         enddo
       enddo
       print*, h0mx,h0mn
@@ -5022,8 +5081,8 @@ implicit none
       cycmx1=-1.e15
       cycmxn=-1.e15
       do j=1,m
-        cycmx1=amax1(cycmx1,abs(h0(1,j)-h0(n-1,j)))
-        cycmxn=amax1(cycmxn,abs(h0(2,j)-h0(n,j)))
+        cycmx1=max(cycmx1,abs(h0(1,j)-h0(n-1,j)))
+        cycmxn=max(cycmxn,abs(h0(2,j)-h0(n,j)))
       enddo
       print*, cycmx1, cycmxn
 
@@ -5034,6 +5093,8 @@ implicit none
       REAL(Kind=4) :: FL(N,M),SCR(N,M)
       INTEGER :: IP(N), N, M
 
+
+      REAL(Kind=4) :: h0mx, h0mn
       INTEGER :: kiter, kit, I, J
 
       KITER=1
@@ -5061,8 +5122,8 @@ implicit none
       h0mn= 1.e15
       do j=1,m
        do i=1,n
-        h0mx=maxval(h0mx,fl(i,j))
-        h0mn=minval(h0mn,fl(i,j))
+        h0mx=max(h0mx,fl(i,j))
+        h0mn=min(h0mn,fl(i,j))
        enddo
       enddo
       print*, h0mx,h0mn
@@ -5072,8 +5133,8 @@ implicit none
       do j=1,m
        do i=1,n
         fl(i,j)=1.289678*fl(i,j)
-        h0mx=maxval(h0mx,fl(i,j))
-        h0mn=minval(h0mn,fl(i,j))
+        h0mx=max(h0mx,fl(i,j))
+        h0mn=min(h0mn,fl(i,j))
        enddo
       enddo
       print*, h0mx,h0mn

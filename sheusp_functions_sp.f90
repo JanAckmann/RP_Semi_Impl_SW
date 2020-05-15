@@ -12,8 +12,6 @@ module implicit_functions_SP
 
     INTEGER :: sbits 
     
-
-    
     rpe_1 = 1.0                                                                          
     rpe_2 = 2.0  
     rpe_3 = 3.0
