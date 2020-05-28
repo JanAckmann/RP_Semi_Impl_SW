@@ -43,7 +43,7 @@ c     DATA DT,NT,NPRINT/200,6480,432/  !flow over the pole
       DATA IPRINT,IPLOT,KT0/0,0,0/
 
 CONTROL TESTS: ZONAL FLOW OR ROSSBY WAVE
-      PARAMETER(IRHW=1)
+      PARAMETER(IRHW=0)
 CONTROL EVALUATION OF THE PRESSURE GRADIENTS: IPS=0 CENTERED DIFFERNCING
 CHOOSING IPS=1 GIVES WEIGHTED AVERAGE OF ONE-SIDED DERIVATIVES THAT
 CONVERGES TO ONE SIDED DERIVATIVE AT THE CROSSECTION WITH THE BOTTOM
@@ -89,7 +89,8 @@ C PARAMETERS FOR ELLIPTIC SOLVER
 ! IPRC =: 0 no preconditioner, vanilla gcr; 1 diagonal preconditioner; 
 !         2 diagonally preconditioned stationary  Richardson iteration
 !         3 tri-diagonally preconditioned stationary  Richardson iteration
-      IPRC=0 
+!         4 Jan's tri-diagonally preconditioned stationary  Richardson iteration
+      IPRC=3 
 COMPUTE GRID      
       DX=PI2/FLOAT(N-2)
       DY= PI/FLOAT(M)
@@ -159,9 +160,9 @@ C INITIATE PRIMARY VARIABLES (PD, QX, QY)
       QXS(I,1)=QX(I,1)
       QYS(I,1)=QY(I,1)
    20 CONTINUE
-      DO 22 I=1,NM
-      write(*,*) P0(I,1)
-   22 CONTINUE
+c      DO 22 I=1,NM
+c      write(*,*) P0(I,1)
+c   22 CONTINUE
 C STORE INITIAL FIELDS AND NORMS FOR LATER NORMALISATION
       DO I=1,NM
        PT0(I,1) = PT(I,1)
@@ -203,7 +204,7 @@ COMPUTE SOLUTION IN TIME *************************************
 
       IF(IANAL.EQ.0) THEN
       DO 100 KT=1,NT
-      write(*,*) kt
+      !write(*,*) kt
       if(kt/mpfl*mpfl.eq.kt) then
         liner=1
           else
@@ -854,8 +855,8 @@ c      err0=amax1(err0,abs(r(k,1)))
          enddo
 c       error=errn/err0
         errn=sqrt(errn)
-       write(*,*) it, l, errn, err0
-       if(errn.lt.eps*err0.and.it.ge.itmn) go to 200
+c       write(*,*) it, l, errn, err0
+       if(errn.lt.eps*err0.and.it .ge. itmn) go to 200
        if(errn.ge.errnm1) go to 200
         errnm1=errn
 c      if(error.lt.eps*err0) go to 200
@@ -936,8 +937,11 @@ c     PARAMETER(NLON=258,NLAT=128)
      1          a11(n,m),a12(n,m),a21(n,m),a22(n,m),b11(n,m),b22(n,m),
      2          s(n,m),dgc(n,m),pfx(n,m),pfy(n,m),ip(n)
       dimension c11(n,m),po(n,m),qr(n,m)
-      dimension f(0:nm1-1,m),e(0:nm1-1,m),g(0:nm1-1,m,2),q(nm1,m,4),
-     1          dgh(n,m),aa(m,4)
+c     dimension f(0:nm1-1,m),e(0:nm1-1,m),g(0:nm1-1,m,2),q(nm1,m,4),
+c    1          dgh(n,m),aa(m,4)
+c     copy of fields names but with changed array sizes
+      dimension f(0:nm1+2,m),e(0:nm1+2,m),g(0:nm1+2,m,4),q(nm1+2,m,4),
+     1          dgh(n,m),aa(m,4),p_in(nm1+2,m)
 
       data betap/-1.e15/
       data itr,line/2,0/
@@ -970,14 +974,16 @@ c     PARAMETER(NLON=258,NLAT=128)
 ! Options 0 to 2 have their own definitions of beta, if required.
       if(jfl.eq.0) then
        if(line.eq.0) then
-       beta=-1.e15
+       betap=-1.e15    !! changed from beta to betap
         if(iflg.lt.3) then
          do j=1,m
          do i=1,n
           betap=amax1(betap,(abs(a11(i,j))+abs(a22(i,j)))/(2.*s(i,j)))
          enddo
          enddo
-        else
+         betap=0.25/betap
+
+        elseif(iflg.eq.3) then
          do j=2,m-1
          do i=1,n
           betap=amax1(betap, 0.5*abs(a22(i,j+1)+a22(i,j-1))/s(i,j))
@@ -987,8 +993,25 @@ c     PARAMETER(NLON=258,NLAT=128)
           betap=amax1(betap,0.5*abs(a22(i,2)+a22(ip(i),1))/s(i,1))
           betap=amax1(betap,0.5*abs(a22(ip(i),m)+a22(i,m-1))/s(i,m-1))
          enddo
+         betap=0.25/betap
+
+        elseif(iflg.eq.4) then
+        !! beti<= 0.5*dx**2/D
+        !! calculate betap= 1/beti = 2*D/dx**2
+        !! Here, the only thing I'm unsure is whether to take dx=hy or dx=2*hy
+        !! to be on the safe side I took dx=hy, which gives the smaller
+        !! pseudo-timestep beti
+        do j=2,m-1
+         do i=1,n
+          betap=amax1(betap, 0.5*abs(a22(i,j+1)+a22(i,j-1))/s(i,j))
+         enddo
+         enddo
+         do i=1,n
+          betap=amax1(betap,0.5*abs(a22(i,2)+a22(ip(i),1))/s(i,1))
+          betap=amax1(betap,0.5*abs(a22(ip(i),m)+a22(i,m-1))/s(i,m-1))
+         enddo
         endif
-       betap=0.25/betap
+                 betap=betap
 c        write(*,*) 'betap', betap
        else
        betap=1.
@@ -997,6 +1020,7 @@ c        write(*,*) 'betap', betap
       endif
 
       beti=1./betap !*(1-line)
+c     write(*,*) 'beti', beti
 
       IF(IFLG.EQ.2) THEN
        betap=0.5
@@ -1233,6 +1257,241 @@ correct for round-off departures from the cyclicity in the vertical
       
       ENDIF
 
+c     ! Jan Ackmann's tridiagonal solver version for testing and comparison
+      IF(IFLG.EQ.4) THEN    
+      omg=1.
+      oms=1.-omg
+      do j=1,m
+      do i=1,n
+       dgh(i,j)=0.
+       po(i,j)=0.
+       p(i,j)=0.
+       r(i,j)=0.
+       c11(i,j)=beti*0.5*a11(i,j)/s(i,J)   !! needs to be multiplied by beti!
+      enddo
+      enddo
+
+
+
+      do 102 it=1,itr
+       if (it==1) then
+       do j=1,m
+       do i=1,n
+        r(i,j)=beti*(-rhs(i,j)) ! changed brackets because 
+                     ! beti should also act on rhs
+       enddo
+       enddo
+       else
+       do j=1,m
+       do i=1,n
+        r(i,j)=p(i,j)+beti*(r(i,j)-rhs(i,j)) ! changed brackets because 
+                     ! beti should also act on rhs
+                     ! p and r needed to be exchanged
+       enddo
+       enddo
+       endif
+
+c      initialization to Elliptic_lecture+notes pages 54 and 63-65
+c      the tridiagonal problem is solved for i=2,nm1
+c      initialization is thus done at indices i=0, i=1, and later for i=n, i=n+1
+       do j=1,m
+       e(2,j)=0.      !! equivalent to p on page 63
+       e(3,j) = 0.    !! valid for all boundary conditions for w(0,j)=0, w(1,j)=0
+                      !! satisfies w0=p2*w2+q2=0 , w1=p3*w3+q3=0
+
+       f(2,j)=0.       !! equivalent to q on page 63
+       f(3,j) = 0.     !! boundary conditions for w(0,j)=0, w(1,j)=0, and d=rhs(i,j)
+                      !! satisfies w0=p2*w2+q2=0 , w1=p3*w3+q3=0
+
+       g(2,j,1) = 1.   !! equivalent to q on page 63
+       g(3,j,1) = 0. !! boundary conditions for w(0,j)=1, w(1,j)=0, and d=0
+                      !! satisfies w0=p2*w2+q2=1 , w1=p3*w3+q3=0
+
+       g(2,j,2) = 0.   !! equivalent to q on page 63
+       g(3,j,2) = 1.   !! boundary conditions for w(0,j)=0, w(1,j)=1, and d=0
+                      !! satisfies w0=p2*w2+q2=0 , w1=p3*w3+q3=1
+
+       g(2,j,3) = 0.   !! equivalent to q on page 63
+       g(3,j,3) = 0.   !! boundary conditions for w(0,j)=0, w(1,j)=0, and d=0
+                      !! satisfies w0=p2*w2+q2=0 , w1=p3*w3+q3=0
+
+       g(2,j,4) = 0.  ! left in for code clarity; could reuse g(:,:,3) instead
+       g(3,j,4) = 0.  ! left in for code clarity; could reuse g(:,:,3) instead
+       enddo
+
+       do i=2,nm1   !! i=2 and i=3 are already defined via the bcs
+                      !! but we need nm1+2 to set the other bcs at i=n, i=n+1
+       do j=1,m
+        dn=c11(i+1,j)+c11(i-1,j)*(1.-e(i,j))
+     &    +(beti+1.)
+        dni=1./dn
+        !! p(i+2)=-c(i)/(a(i)p(i)+b(i)) in the nomenclature of page 63
+        e(i+2,j)=                  c11(i+1,j)*dni 
+        !! q(i+2)=(d(i)-a(i)q(i))/(a(i)p(i)+b(i)) in the nomenclature of page 63
+        f(i+2,j)=(c11(i-1,j)*f(i,j)+r(i,j))*dni
+        g(i+2,j,1)=(c11(i-1,j)*g(i,j,1)   )*dni
+        g(i+2,j,2)=(c11(i-1,j)*g(i,j,2)   )*dni
+        g(i+2,j,3)=(c11(i-1,j)*g(i,j,3)   )*dni
+        g(i+2,j,4)=(c11(i-1,j)*g(i,j,4)   )*dni
+       enddo
+       enddo
+
+       il=nm1+1  ! set bcs at i=N, I=N+1
+       do j=1,m
+        p_in(il,j)=0.
+        p_in(il+1,j)=0.
+
+        q(il,j,1)=0.
+        q(il+1,j,1)=0.
+
+        q(il,j,2)=0.
+        q(il+1,j,2)=0.
+
+        q(il,j,3)=1.
+        q(il+1,j,3)=0.
+
+        q(il,j,4)=0.
+        q(il+1,j,4)=1.
+       enddo
+
+       il=nm1  
+       do j=1,m
+       do i=il,2,-1
+        !! w(i)=p(i+2)*w(i+2)+q(i+2) in nomenclature of page 63
+        p_in(i,j) =e(i+2,j)*p_in(i+2,j) +f(i+2,j)
+        q(i,j,1)  =e(i+2,j)*q(i+2,j,1)  +g(i+2,j,1)
+        q(i,j,2)  =e(i+2,j)*q(i+2,j,2)  +g(i+2,j,2)
+        q(i,j,3)  =e(i+2,j)*q(i+2,j,3)  +g(i+2,j,3)
+        q(i,j,4)  =e(i+2,j)*q(i+2,j,4)  +g(i+2,j,4)
+       enddo
+       enddo
+
+       il1=nm1-1
+       il2=2
+       i2 =3
+       i1 =nm1
+       do j=1,m
+        d11= q(il1,j,1)-1.
+        d12= q(il1,j,2)
+        d13= q(il1,j,3)
+        d14= q(il1,j,4)
+        s1 =-p_in(il1,j)
+
+        d21= q(i1,j,1)
+        d22= q(i1,j,2)-1.
+        d23= q(i1,j,3)
+        d24= q(i1,j,4)
+        s2 =-p_in(i1,j)
+
+        d31= q(il2,j,1)
+        d32= q(il2,j,2)
+        d33= q(il2,j,3)-1.
+        d34= q(il2,j,4)
+        s3 =-p_in(il2,j)
+
+        d41= q(i2,j,1)
+        d42= q(i2,j,2)
+        d43= q(i2,j,3)
+        d44= q(i2,j,4)-1.
+        s4 =-p_in(i2,j)
+
+        det40=d11*det3(d22,d23,d24,d32,d33,d34,d42,d43,d44)
+     .       -d21*det3(d12,d13,d14,d32,d33,d34,d42,d43,d44)
+     .       +d31*det3(d12,d13,d14,d22,d23,d24,d42,d43,d44)
+     .       -d41*det3(d12,d13,d14,d22,d23,d24,d32,d33,d34) 
+        deti=1./det40
+        det41=s1 *det3(d22,d23,d24,d32,d33,d34,d42,d43,d44)
+     .       -s2 *det3(d12,d13,d14,d32,d33,d34,d42,d43,d44)
+     .       +s3 *det3(d12,d13,d14,d22,d23,d24,d42,d43,d44)
+     .       -s4 *det3(d12,d13,d14,d22,d23,d24,d32,d33,d34)
+        det42=d11*det3( s2,d23,d24, s3,d33,d34, s4,d43,d44)
+     .       -d21*det3( s1,d13,d14, s3,d33,d34, s4,d43,d44)
+     .       +d31*det3( s1,d13,d14, s2,d23,d24, s4,d43,d44)
+     .       -d41*det3( s1,d13,d14, s2,d23,d24, s3,d33,d34)
+        det43=d11*det3(d22, s2,d24,d32, s3,d34,d42, s4,d44)
+     .       -d21*det3(d12, s1,d14,d32, s3,d34,d42, s4,d44)
+     .       +d31*det3(d12, s1,d14,d22, s2,d24,d42, s4,d44)
+     .       -d41*det3(d12, s1,d14,d22, s2,d24,d32, s3,d34)
+        det44=d11*det3(d22,d23, s2,d32,d33, s3,d42,d43, s4)
+     .       -d21*det3(d12,d13, s1,d32,d33, s3,d42,d43, s4)
+     .       +d31*det3(d12,d13, s1,d22,d23, s2,d42,d43, s4)
+     .       -d41*det3(d12,d13, s1,d22,d23, s2,d32,d33, s3)
+
+        aa(j,4)=det44*deti
+        aa(j,3)=det43*deti
+        aa(j,2)=det42*deti
+        aa(j,1)=det41*deti
+
+       enddo
+
+       do j=1,m
+       do i=2,nm1
+       p(i,j)=p_in(i,j)+aa(j,1)*q(i,j,1)
+     .                 +aa(j,2)*q(i,j,2)
+     .                 +aa(j,3)*q(i,j,3)
+     .                 +aa(j,4)*q(i,j,4)
+       enddo
+       enddo
+correct for round-off departures from the cyclicity in the vertical
+       do j=1,m
+        p(1,j)=p(nm1,j)
+        p(n,j)=p(2,j)
+       enddo
+       call adjust_conservation(p,s,n,m)
+
+
+      
+      if(it.eq.itr) goto 103
+      do j=2,m-1
+       do i=2,n-1
+        pfx(i,j)=p(i+1,j)-p(i-1,j)
+        pfy(i,j)=p(i,j+1)-p(i,j-1)
+       enddo
+      enddo
+      do i=2,n-1
+       pfx(i,1)=p(i+1,1)-p(i-1,1)
+       pfx(i,m)=p(i+1,m)-p(i-1,m)
+       pfy(i,1)=p(i,2)-p(ip(i),1)
+       pfy(i,m)=p(ip(i),m)-p(i,m-1)
+      enddo
+      do j=1,m
+       pfx(1,j)=pfx(n-1,j)
+       pfx(n,j)=pfx(2  ,j)
+       pfy(1,j)=pfy(n-1,j)
+       pfy(n,j)=pfy(2  ,j)
+      enddo
+
+      do j=1,m
+      do i=1,n
+       util=                  swcp*(a12(i,j)*pfy(i,j)+b11(i,j)*p(i,j))
+       vtil=pfy(i,j)*a22(i,j)+swcp*(a21(i,j)*pfx(i,j)+b22(i,j)*p(i,j))
+       pfx(i,j)=util
+       pfy(i,j)=vtil
+      enddo
+      enddo
+
+      do j=2,m-1
+       do i=2,n-1
+        r(i,j)= (pfx(i+1,j)-pfx(i-1,j)+pfy(i,j+1)-pfy(i,j-1))/s(i,j)
+       enddo
+      enddo
+      do i=2,n-1
+       r(i,1)= (pfx(i+1,1)-pfx(i-1,1)+(pfy(i,2)+pfy(i,1)))/s(i,1)
+       r(i,m)= (pfx(i+1,m)-pfx(i-1,m)-(pfy(i,m)+pfy(i,m-1)))/s(i,m)
+      enddo
+      do j=1,m
+       r(1,j)=r(n-1,j)
+       r(n,j)=r(2  ,j)
+      enddo
+      do j=1,m
+      do i=1,n
+       r(i,j)=0.5*r(i,j) !-p(i,j)
+      enddo
+      enddo
+  102 continue
+  103 continue
+      
+      ENDIF
       return
       end
 
@@ -1537,8 +1796,9 @@ c     IM=I-K+(N-(I-K))/N*(N-2)
       pi=acos(-1.)
       abswidth=pi/64.*3   !RHW4
 !     atau=2.*(9.*2.*DT)
-      atau=(2.*DT) ! RHW4
-!     atau=2.*DT    !Zonal flow past Earth orography
+!     atau=(2.*DT) ! RHW4
+!     atau=200.*DT ! RHW4
+      atau=2.*DT    !Zonal flow past Earth orography
       alpha=1./atau
 
       ymax = 0.5*pi

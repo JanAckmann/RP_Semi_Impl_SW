@@ -207,7 +207,7 @@ mountain = .false.
 stencil=0
 
 
-do ID_PREC=0,0,-5
+do ID_PREC=5,5,-5
  do IRHW = 1,1
 
   do DP_Depth=0,0,2
@@ -884,7 +884,7 @@ IF(IANAL.EQ.0) THEN
 
 ! COMPUTE FIRST GUESS FROM ADVECTION
 
-  CALL  GCR_PRE(PT,F1(:,:,0),F2(:,:,0),HX,HY,S,F1(:,:,1),F2(:,:,1), &
+  CALL  GCR_PRE(PT,F1(:,:,0),F2(:,:,0),HX,HY,S,S_full,F1(:,:,1),F2(:,:,1), &
        &      PD(:,:),E1(:,:,0),E2(:,:,0),COR,IP, &
        &      U(:,:,0),U(:,:,1),V(:,:,0),V(:,:,1),N,M,GC1,GC2,   &
            &    MGH1IHX, MGH2IHY, AC, BC, AD, BD,  &
@@ -1025,8 +1025,8 @@ QY_old(:,:)=QY(:,:)
     CALL PRFC0(PT,F1(:,:,0),F2(:,:,0),PD,HX,HY,IP,IPS,GH1,GH2,EP,N,M)
     
     IF(IRHW.EQ.-1) THEN
-      CALL SMOOTHSTATE(QX,QXS,E1(1,1,0),E2(1,1,0),IP,-1.0d0,KT,N,M)
-      CALL SMOOTHSTATE(QY,QYS,E1(1,1,0),E2(1,1,0),IP,-1.0d0,KT,N,M)
+      CALL SMOOTHSTATE(QX,QXS,E1(1,1,0),E2(1,1,0),IP,-1.,KT,N,M)
+      CALL SMOOTHSTATE(QY,QYS,E1(1,1,0),E2(1,1,0),IP,-1.,KT,N,M)
 !     CALL POLARFILT(QX,HX,HY,FZ,SCR,N,M)
 !     CALL POLARFILT(QY,HX,HY,FZ,SCR,N,M)
     ENDIF
@@ -3313,7 +3313,7 @@ end subroutine
 
 
 
-subroutine GCR_PRE(p,pfx,pfy,hx,hy,s,b,p0,pb,e1,e2,cor,ip  &
+subroutine GCR_PRE(p,pfx,pfy,hx,hy,s,S_full,b,p0,pb,e1,e2,cor,ip  &
               & ,d,q,r,ar,n1,n2,gc1,gc2, &
            &    MGH1IHX, MGH2IHY, AC, BC, AD, BD,  &
            &  niter,nitsm,icount,error, p_T, sum_time,&
@@ -3329,7 +3329,7 @@ INTEGER, parameter :: kord=4, lord=kord-1
 INTEGER :: n1, n2
 
 DOUBLE PRECISION :: p(n1,n2),pfx(n1,n2),pfy(n1,n2),hx(n1,n2),hy(n1,n2),s(n1,n2), &
-     &   b(n1,n2),pb(n1,n2),p0(n1,n2),                         &
+     &   b(n1,n2),pb(n1,n2),p0(n1,n2), S_full,                   &
      &   e1(n1,n2),e2(n1,n2),cor(n1,n2),d(n1,n2),q(n1,n2),r(n1,n2),ar(n1,n2), &
      &   p_T(n1,n2), r_HP(n1,n2), r_true(n1,n2), r0_true(n1,n2), p_true(n1,n2), &
      &   p0_true(n1, n2), b_true(n1, n2), PMB(n1, n2), PMP0(n1, n2)
@@ -3554,7 +3554,7 @@ endif
 call cpu_time(startLP)
 
 call precon(r,x(:,:,1),ax(:,:,1), T_step,  A_c, ps, divi,a11,a12,a21,a22,b11,b22,p0,  &
-                &   pfx,pfy,s,n1,n2,ip,ID_PREC, num_of_bits, DP_Depth)
+                &   pfx,pfy,s,S_full,n1,n2,ip,ID_PREC, num_of_bits, DP_Depth)
 
     !  do j=1,1
     !   do i=1,n1
@@ -3760,7 +3760,7 @@ endif
 
 call cpu_time(startLP)
     call precon(r,qu, aqu , T_step,  A_c, ps, divi,a11,a12,a21,a22,b11,b22,p0,   &
-                &   pfx,pfy,s,n1,n2,ip,ID_PREC, num_of_bits, DP_Depth)
+                &   pfx,pfy,s,S_full,n1,n2,ip,ID_PREC, num_of_bits, DP_Depth)
   !    do j=1,1
   !     do i=1,n1
   !      write(*,*)  'qu',i, J, qu(i,j)
@@ -3985,16 +3985,31 @@ IF (ID_PREC==5) then !! ADI type preconditioner
 !Delta_t=rpe_1/T_step
 !write(*,*) 'old working',Delta_t
 
-max_QX_QY=(abs(A21(1,1)))/(rpe_2*S(1,1))
-DO J=1,M
-  DO I=1,N
-     max_QX_QY=max(max_QX_QY,(abs(A21(I,J)))/(4.0d0*S(I,J)) )     
-  ENDDO
-ENDDO
+!max_QX_QY=-1.e15
+!DO J=1,M
+!  DO I=1,N
+!        !  write(*,*) i, j, a21(i,j), s(i,j)  , 4.0d0*max_QX_QY
+!     max_QX_QY=max(max_QX_QY,(abs(A21(I,J)))/(4.0d0*S(I,J)) )   
+!        !  write(*,*) i, j, a21(i,j), s(i,j)  , 4.0d0*max_QX_QY
+!        !  read(*,*)
+!  ENDDO
+!ENDDO
+
+max_QX_QY=-1.e15
+do j=2,m-1
+ do i=1,n
+  max_QX_QY=amax1(max_QX_QY, 0.5*abs(a21(i,j+1)+a21(i,j-1))/s(i,j))
+ enddo
+enddo
+do i=1,n
+  max_QX_QY=amax1(max_QX_QY,0.5*abs(a21(i,2)+a21(ip(i),1))/s(i,1))
+  max_QX_QY=amax1(max_QX_QY,0.5*abs(a21(ip(i),m)+a21(i,m-1))/s(i,m-1))
+enddo
+
 T_step=max_QX_QY !0.92d0!
 Delta_t=rpe_1/T_step
 
-!write(*,*) 'old',Delta_t
+write(*,*) 'Delta_T',Delta_t
 
 !max_QX_QY=(rpe_2*abs(A21(1,1)))/( ( (2.0d0*acos(-1.0d0)/Dfloat(M)) *6371.22E+03 )**2 )
 !DO J=1,M
@@ -4014,19 +4029,19 @@ Delta_t=rpe_1/T_step
       enddo
 
       DO J=1+DP_Depth,M-DP_Depth
-        DO I=1,N-1
+        DO I=2,N-1
      A(I,J)= -Delta_t*A11(I-1,J)/(rpe_2*S_L(I,J))
         enddo
       enddo
 
       DO J=1+DP_Depth,M-DP_Depth
-        DO I=1,N-1
+        DO I=2,N-1
      B(I,J)= rpe_1 +Delta_t+ Delta_t* (A11(I+1,J)+A11(I-1,J))/(rpe_2*S_L(I,J))
         enddo
       enddo
 
       DO J=1+DP_Depth,M-DP_Depth
-        DO I=1,N-1
+        DO I=2,N-1
      C(I,J)= -Delta_t*A11(I+1,J)/(rpe_2*S_L(I,J))
         enddo
       enddo
@@ -4040,39 +4055,39 @@ Delta_t=rpe_1/T_step
 
 
       DO J=1,DP_Depth
-        DO I=1,N-1
+        DO I=2,N-1
      A(I,J)= -Delta_t*A11(I-1,J)/(rpe_2*S(I,J))
         enddo
       enddo
 
       DO J=M+1-DP_Depth,M
-        DO I=1,N-1
+        DO I=2,N-1
      A(I,J)= -Delta_t*A11(I-1,J)/(rpe_2*S(I,J))
         enddo
       enddo
 
 
       DO J=1,DP_Depth
-        DO I=1,N-1
+        DO I=2,N-1
      B(I,J)= rpe_1 +Delta_t+ Delta_t* (A11(I+1,J)+A11(I-1,J))/(rpe_2*S(I,J))
         enddo
       enddo
 
       DO J=M+1-DP_Depth,M
-        DO I=1,N-1
+        DO I=2,N-1
      B(I,J)= rpe_1 +Delta_t+ Delta_t* (A11(I+1,J)+A11(I-1,J))/(rpe_2*S(I,J))
         enddo
       enddo
 
 
       DO J=1,DP_Depth
-        DO I=1,N-1
+        DO I=2,N-1
      C(I,J)= -Delta_t*A11(I+1,J)/(rpe_2*S(I,J))
         enddo
       enddo
 
       DO J=M+1-DP_Depth,M
-        DO I=1,N-1
+        DO I=2,N-1
      C(I,J)= -Delta_t*A11(I+1,J)/(rpe_2*S(I,J))
         enddo
       enddo
@@ -4107,7 +4122,7 @@ end if
 
 end subroutine
 
-subroutine precon(R,QU,AQU, T_step,A, ps, divi, A11,A12,A21,A22,B11,B22,P0,U,V,S,N,M,IP,ID_PREC, num_of_bits,DP_Depth)
+subroutine precon(R,QU,AQU, T_step,A, ps, divi, A11,A12,A21,A22,B11,B22,P0,U,V,S, S_full,N,M,IP,ID_PREC, num_of_bits,DP_Depth)
 
 use implicit_functions_DP
 
@@ -4115,7 +4130,7 @@ implicit none
 DOUBLE PRECISION ::  R(N,M),QU(N,M),A11(N,M),A12(N,M),A21(N,M),A22(N,M),  &
     &      B11(N,M),B22(N,M),P0(N,M),U(N,M),V(N,M),S(N,M)
 DOUBLE PRECISION ::  A(N,M), B(N,M), C(N,M), ps(N+1,M), divi(N,M)
-DOUBLE PRECISION ::  AQU(N,M), T_step
+DOUBLE PRECISION ::  AQU(N,M), T_step, S_full
 INTEGER :: IP(N), ID_PREC, num_of_bits,DP_Depth
 INTEGER :: N, M, I, J
 
@@ -4123,13 +4138,13 @@ IF (ID_PREC==5) then !! ADI type preconditioner
 
 
 
-call precon_ADI(R,QU , T_step, A, ps, divi, A11,A12,A21,A22,B11,B22,P0,U,V,S,N,M,IP,ID_PREC, num_of_bits,DP_Depth)
+call precon_ADI(R,QU , T_step, A, ps, divi, A11,A12,A21,A22,B11,B22,P0,U,V,S,S_full,N,M,IP,ID_PREC, num_of_bits,DP_Depth)
  ! write(*,*) 'does he get out?'
 !! regardless of preconditioners L(q^(n+1)) is needed
  
   ! write(*,*) 'AQU complete'
 elseif (ID_PREC==6) then
-call precon_Jac(R,QU , T_step, A, ps, divi, A11,A12,A21,A22,B11,B22,P0,U,V,S,N,M,IP,ID_PREC, num_of_bits,DP_Depth)
+call precon_Jac(R,QU , S_full, A, ps, divi, A11,A12,A21,A22,B11,B22,P0,U,V,S,N,M,IP,ID_PREC, num_of_bits,DP_Depth)
 
 elseif(ID_PREC==0) then
 
@@ -4143,13 +4158,13 @@ end subroutine
 
 !   implement ADI type preconditioner based on q_n+1 =q_n + dt{ Lz(q_n+1) + Lm(q_n) + H(q_n+1) -R}
 !
-SUBROUTINE precon_ADI(R,QU , T_step,  A, ps, divi,A11,A12,A21,A22,B11,B22,P0,U,V,S,N,M,IP,ID_PREC, num_of_bits,DP_Depth)
+SUBROUTINE precon_ADI(R,QU , T_step,  A, ps, divi,A11,A12,A21,A22,B11,B22,P0,U,V,S,S_full,N,M,IP,ID_PREC, num_of_bits,DP_Depth)
 use implicit_functions_DP
 
 implicit none
 
 DOUBLE PRECISION :: R(N,M),QU(N,M),A11(N,M),A12(N,M),A21(N,M),A22(N,M),  &
-    &      B11(N,M),B22(N,M),P0(N,M),U(N,M),V(N,M),S(N,M)
+    &      B11(N,M),B22(N,M),P0(N,M),U(N,M),V(N,M),S(N,M),  C11(N,M)
 INTEGER :: IP(N), ID_PREC, num_of_bits,DP_Depth
 INTEGER :: N, M
 
@@ -4158,14 +4173,15 @@ DOUBLE PRECISION :: aa(M,1:4), deti, det40, det41, det42, det43, det44, det3,   
                            & d11, d12, d13, d14, d21, d22, d23, d24,       &
                            & d31, d32, d33, d34, d41, d42, d43, d44,       &
                            & s1, s2, s3, s4
-DOUBLE PRECISION ::T_step, Delta_t
+DOUBLE PRECISION ::T_step, Delta_t, dn, dni, S_full, util, vtil, swcp
 !DOUBLE PRECISION :: 
 integer :: iter, max_iter, time_scale  !! number of richardson iterations
 INTEGER :: I, J, iteration
 
 
 
-max_iter=1
+max_iter=2
+swcp=rpe_1
 !initialize the inverse of R with 0
 DO J=1,M
   DO I=1,N
@@ -4187,6 +4203,12 @@ do iteration=1,max_iter
 If(iteration==1) then
 
 ! 1) first iteration
+  DO J=1,M
+    DO I=1,N    
+ 
+      C11(I,J)=Delta_t*0.5*a11(i,j)/s(i,J)
+    END DO
+  END DO
 
       DO J=1+DP_Depth,M-DP_Depth
         DO I=1,N
@@ -4208,44 +4230,54 @@ If(iteration==1) then
 
 
 else
-  DO J=2,M-1
-    DO I=2,N-1
-      V(I,J)=QU(I,J+1)-QU(I,J-1)
-    end do
-  end do
   
-  DO I=2,N-1
-    V(I,1)=QU(I,2)-QU(IP(I),1)
-    V(I,M)=QU(IP(I),M)-QU(I,M-1)
-  ENDDO   
+      do j=2,m-1
+       do i=2,n-1
+        U(i,j)=QU(i+1,j)-QU(i-1,j)
+        V(i,j)=QU(i,j+1)-QU(i,j-1)
+       enddo
+      enddo
+      do i=2,n-1
+       U(i,1)=QU(i+1,1)-QU(i-1,1)
+       U(i,m)=QU(i+1,m)-QU(i-1,m)
+       V(i,1)=QU(i,2)-QU(ip(i),1)
+       V(i,m)=QU(ip(i),m)-QU(i,m-1)
+      enddo
 
-  CALL XBC(V,N,M)
+       CALL XBC(U,N,M)
+       CALL XBC(V,N,M)
 
-  DO J=1,M
-    DO I=1,N
+      do j=1,m
+      do i=1,n
+       util=                swcp*(a12(i,j)*V(i,j)+b11(i,j)*QU(i,j))
+       vtil=V(i,j)*a21(i,j)+swcp*(a22(i,j)*U(i,j)+b22(i,j)*QU(i,j))
+       U(i,j)=util
+       V(i,j)=vtil
+      enddo
+      enddo
 
-      V(I,J)=V(I,J)*A21(I,J) ! +B22(I,J)*(QU(I,J))
-
-    ENDDO
-  ENDDO
-
+  CALL XBC(U,N,M)
   CALL XBC(V,N,M)
 
   DO J=2,M-1
     DO I=2,N-1
-      F(I,J)= (V(I,J+1)-V(I,J-1))/(rpe_2*S(I,J))
+      F(I,J)= (U(I+1,J)-U(I-1,J)+V(I,J+1)-V(I,J-1))/(S(I,J))
     end do
   end do    
  
 
   DO I=2,N-1
-    F(I,1)= ((V(I,2)+V(I,1)))/(rpe_2*S(I,1))
-    F(I,M)= -((V(I,M)+V(I,M-1)))/(rpe_2*S(I,M))
+    F(I,1)= (U(I+1,1)-U(I-1,1)+(V(I,2)+V(I,1)))/(S(I,1))
+    F(I,M)= (U(I+1,M)-U(I-1,M)-(V(I,M)+V(I,M-1)))/(S(I,M))
   ENDDO
 
 
   CALL XBC(F,N,M)
-
+      do j=1,m
+      do i=1,n
+       F(i,j)=rpe_05*F(i,j) !-p(i,j)
+      enddo
+      enddo
 
   DO J=1,M
     DO I=1,N    
@@ -4284,8 +4316,8 @@ end if
   ! initialize the 5 linear subsystems with boundary conditions (left boundary)
  
   DO J=1,M
-!    ps(2,J)=rpe_0
-!    ps(3,J)=rpe_0
+    ps(2,J)=rpe_0
+    ps(3,J)=rpe_0
 
     qs(2,J,0)  =rpe_0
     qs(3,J,0)  =rpe_0
@@ -4327,6 +4359,7 @@ end if
 !        enddo
 !      enddo
 
+
    !! end of rewrite
 
 
@@ -4345,31 +4378,40 @@ end if
 
       DO J=1+DP_Depth,M-DP_Depth
         DO I=2,N-1
-     qs(I+2,J,0)= (rhs(I,J)-A(I,J)*qs(I,J,0))/divi(I,J)
-     qs(I+2,J,1)= (rpe_0   -A(I,J)*qs(I,J,1))/divi(I,J)
-     qs(I+2,J,2)= (rpe_0   -A(I,J)*qs(I,J,2))/divi(I,J)
-     qs(I+2,J,3)= (rpe_0   -A(I,J)*qs(I,J,3))/divi(I,J)
-     qs(I+2,J,4)= (rpe_0   -A(I,J)*qs(I,J,4))/divi(I,J)
+       divi(I,J)=c11(i+1,j)+c11(i-1,j)*(rpe_1-ps(i,j)) +(Delta_t+rpe_1)
+        divi(I,J)=rpe_1/divi(I,J)
+     ps(i+2,j)=                  c11(i+1,j)*divi(I,J) 
+     qs(I+2,J,0)= (rhs(I,J)+c11(i-1,j)*qs(I,J,0))*divi(I,J)
+     qs(I+2,J,1)= (c11(i-1,j)*qs(I,J,1))*divi(I,J) 
+     qs(I+2,J,2)= (c11(i-1,j)*qs(I,J,2))*divi(I,J) 
+     qs(I+2,J,3)= (c11(i-1,j)*qs(I,J,3))*divi(I,J) 
+     qs(I+2,J,4)= (c11(i-1,j)*qs(I,J,4))*divi(I,J) 
         enddo
       enddo
 
       DO J=1,DP_Depth
         DO I=2,N-1
-     qs(I+2,J,0)= (rhs(I,J)-A(I,J)*qs(I,J,0))/divi(I,J)
-     qs(I+2,J,1)= (rpe_0   -A(I,J)*qs(I,J,1))/divi(I,J)
-     qs(I+2,J,2)= (rpe_0   -A(I,J)*qs(I,J,2))/divi(I,J)
-     qs(I+2,J,3)= (rpe_0   -A(I,J)*qs(I,J,3))/divi(I,J)
-     qs(I+2,J,4)= (rpe_0   -A(I,J)*qs(I,J,4))/divi(I,J)
+       divi(I,J)=c11(i+1,j)+c11(i-1,j)*(rpe_1-ps(i,j)) +(Delta_t+rpe_1)
+        divi(I,J)=rpe_1/divi(I,J)
+     ps(i+2,j)=                  c11(i+1,j)*divi(I,J) 
+     qs(I+2,J,0)= (rhs(I,J)+c11(i-1,j)*qs(I,J,0))*divi(I,J)
+     qs(I+2,J,1)= (c11(i-1,j)*qs(I,J,1))*divi(I,J) 
+     qs(I+2,J,2)= (c11(i-1,j)*qs(I,J,2))*divi(I,J) 
+     qs(I+2,J,3)= (c11(i-1,j)*qs(I,J,3))*divi(I,J) 
+     qs(I+2,J,4)= (c11(i-1,j)*qs(I,J,4))*divi(I,J) 
         enddo
       enddo
 
       DO J=M+1-DP_Depth,M
         DO I=2,N-1
-     qs(I+2,J,0)= (rhs(I,J)-A(I,J)*qs(I,J,0))/divi(I,J)
-     qs(I+2,J,1)= (rpe_0   -A(I,J)*qs(I,J,1))/divi(I,J)
-     qs(I+2,J,2)= (rpe_0   -A(I,J)*qs(I,J,2))/divi(I,J)
-     qs(I+2,J,3)= (rpe_0   -A(I,J)*qs(I,J,3))/divi(I,J)
-     qs(I+2,J,4)= (rpe_0   -A(I,J)*qs(I,J,4))/divi(I,J)
+       divi(I,J)=c11(i+1,j)+c11(i-1,j)*(rpe_1-ps(i,j)) +(Delta_t+rpe_1)
+        divi(I,J)=rpe_1/divi(I,J)
+     ps(i+2,j)=                  c11(i+1,j)*divi(I,J) 
+     qs(I+2,J,0)= (rhs(I,J)+c11(i-1,j)*qs(I,J,0))*divi(I,J)
+     qs(I+2,J,1)= (c11(i-1,j)*qs(I,J,1))*divi(I,J) 
+     qs(I+2,J,2)= (c11(i-1,j)*qs(I,J,2))*divi(I,J) 
+     qs(I+2,J,3)= (c11(i-1,j)*qs(I,J,3))*divi(I,J) 
+     qs(I+2,J,4)= (c11(i-1,j)*qs(I,J,4))*divi(I,J) 
         enddo
       enddo
 
@@ -4450,17 +4492,17 @@ end if
       
     end if
       
-       d21=ws(N-2,J,1)-rpe_1
-       d22=ws(N-2,J,2)
-       d23=ws(N-2,J,3)
-       d24=ws(N-2,J,4)
-       s2 =-ws(N-2,J,0)
+       d11=ws(N-2,J,1)-rpe_1
+       d12=ws(N-2,J,2)
+       d13=ws(N-2,J,3)
+       d14=ws(N-2,J,4)
+       s1 =-ws(N-2,J,0)
 
-       d11=ws(N-1,J,1)
-       d12=ws(N-1,J,2)-rpe_1
-       d13=ws(N-1,J,3)
-       d14=ws(N-1,J,4)
-       s1 =-ws(N-1,J,0)
+       d21=ws(N-1,J,1)
+       d22=ws(N-1,J,2)-rpe_1
+       d23=ws(N-1,J,3)
+       d24=ws(N-1,J,4)
+       s2 =-ws(N-1,J,0)
 
        d31=ws(2,J,1)
        d32=ws(2,J,2)
@@ -4500,7 +4542,6 @@ end if
       aa(J,3)=det43*deti
       aa(J,2)=det42*deti
       aa(J,1)=det41*deti
-
 
   end do 
   !write(*,*) 'aa's finished'
@@ -4545,7 +4586,8 @@ end if
       enddo
 
   CALL XBC(QU,N,M)
-
+ 
+  call adjust_conservation(QU,s,S_full,n,m)
    !! end of rewrite
    
   !write(*,*) 'QU finished'
@@ -4737,7 +4779,7 @@ INTEGER :: N, M
 
 INTEGER :: I, J
     !write(*,*) S_full
-      cnst=dble(0.0d0)
+      cnst=0.
       do j=1,m
         do i=2,n-1
           !write(*,*) i, j, s(i,j), p(i,j), s(i,j)*p(i,j)
