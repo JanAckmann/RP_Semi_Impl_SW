@@ -54,7 +54,8 @@ DOUBLE PRECISION ::TIME,&
                & DX, &
                & DY, &
                & DT, &
-               & mue
+               & mue, &
+               & err0_check
 
 DOUBLE PRECISION :: DX_23, &
                & DY_23, &
@@ -994,6 +995,14 @@ CALL DIVER(div_new(:,:),QX *GC1   ,QY *GC2   ,HX,HY,S,N,M,IP,1)
 
 r_eval(:,:)=(0.5d0*(div_new(:,:)+div_old(:,:))*G_23-PD_old(:,:)+PT(:,:))
 
+err0_check=rpe_0
+    DO J=1,M
+      DO I=1,N
+        err0_check=err0_check+r_eval(I,J)*r_eval(I,J)
+
+      end do
+    end do
+write(*,*) sqrt(err0_check)
 if (.not. (KT/NPRINT*NPRINT.NE.KT)) then
 !write(*,*) div_old(1,1),div_new(1,1), PD_old(1,1), PT(1,1)
 !write(*,*) 0.5d0*(div_old(1,1)+div_new(1,1))*G_23, -PD_old(1,1)+ PT(1,1)
@@ -1001,7 +1010,7 @@ if (.not. (KT/NPRINT*NPRINT.NE.KT)) then
 
 write(*,*) 'r EVAL'
   write(*,*) (maxval(abs(r_eval(:,J))), J=1,M)
-!read(*,*)
+read(*,*)
 
 endif
     
@@ -3377,7 +3386,7 @@ lowprectime=0.0d0
 eps=1.e-3   !! original
 itr=1000
 niter=0
-itmn=1
+itmn=0
 exiting=.false.
 
 epa=1.e-30
@@ -4006,7 +4015,7 @@ do i=1,n
   max_QX_QY=amax1(max_QX_QY,0.5*abs(a21(ip(i),m)+a21(i,m-1))/s(i,m-1))
 enddo
 
-T_step=max_QX_QY !0.92d0!
+T_step=max_QX_QY !0.92d0!  500.*
 Delta_t=rpe_1/T_step
 
 write(*,*) 'Delta_T',Delta_t
