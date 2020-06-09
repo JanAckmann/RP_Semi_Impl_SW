@@ -43,7 +43,7 @@ c     DATA DT,NT,NPRINT/200,6480,432/  !flow over the pole
       DATA IPRINT,IPLOT,KT0/0,0,0/
 
 CONTROL TESTS: ZONAL FLOW OR ROSSBY WAVE
-      PARAMETER(IRHW=0)
+      PARAMETER(IRHW=1)
 CONTROL EVALUATION OF THE PRESSURE GRADIENTS: IPS=0 CENTERED DIFFERNCING
 CHOOSING IPS=1 GIVES WEIGHTED AVERAGE OF ONE-SIDED DERIVATIVES THAT
 CONVERGES TO ONE SIDED DERIVATIVE AT THE CROSSECTION WITH THE BOTTOM
@@ -57,7 +57,7 @@ c     DATA DTFIL/NFIL*400./
 c     DATA NTFIL/NFIL*797/
       DATA NTFIL/NFIL*1594/
       DATA DTFIL/NFIL*200./
-      COMMON/ITERO/ ERROR,EXITCND,NITER,NITSM,ICOUNT
+      COMMON/ITERO/ ERROR,QRROR,EXITCND,NITER,NITSM,ICOUNT
       DATA NITSM,ICOUNT,ERROR/0,0,1.e-10/
       COMMON/ELLIPS/ EPS,ITR,ITMN,IPRC
       common/surftot/ S_full
@@ -83,7 +83,7 @@ C PARAMETERS FOR MPDATA ADVECTION
 C SMALL CONSTANT (SMALL COMPARED TO DEPTH OF THE ATMOSPHERE)
       EP=1.E-6
 C PARAMETERS FOR ELLIPTIC SOLVER 
-      EPS=1.e-3 !minimum reduction of residual error
+      EPS=1.e-2 !minimum reduction of residual error
       ITR=100   !maximum # of iterations
       ITMN=1    !minimum # of itearations
 ! IPRC =: 0 no preconditioner, vanilla gcr; 1 diagonal preconditioner; 
@@ -781,7 +781,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccc
      1          b(*),pb(*),p0(*),
      2          e1(*),e2(*),cor(*),alp(*),ip(*),
      3          d(*),qr(*),r(*),ar(*)
-      common/itero/ error,exitcnd,niter,nitsm,icount
+      common/itero/ error,qrror,exitcnd,niter,nitsm,icount
       common/ellips/ eps,itr,itmn,iprc
       common/printl/ iprint
 c     PARAMETER(NLON=130,NLAT=64)
@@ -820,11 +820,14 @@ c
       call precon(r,qr,ar,a11,a12,a21,a22,b11,b22,s,d,pfx,pfy,ip,iprc,1)
 
       err0=0.
+      qrr0=0.
       do k=1,nml
        err0=err0+r(k)*r(k)
+       qrr0=qrr0+qr(k)*qr(k)
 c      err0=amax1(err0,abs(r(k,1)))
       enddo
        err0=sqrt(err0)
+       qrr0=sqrt(qrr0)
        errnm1=err0
 
       do k=1,nml
@@ -855,8 +858,8 @@ c      err0=amax1(err0,abs(r(k,1)))
          enddo
 c       error=errn/err0
         errn=sqrt(errn)
-c       write(*,*) it, l, errn, err0
-       if(errn.lt.eps*err0.and.it .ge. itmn) go to 200
+       write(*,*) it, l, errn, err0
+       if(errn.lt.eps*err0.and.it .gt. itmn) go to 200
        if(errn.ge.errnm1) go to 200
         errnm1=errn
 c      if(error.lt.eps*err0) go to 200
@@ -906,6 +909,12 @@ c         del(ll)=amax1(del(ll),0.)
       icount=icount+1
       nitsm=nitsm+niter
       error=errn/err0
+      qrr=0.
+      do k=1,nml
+       qrr=qrr+qr(k)*qr(k)
+      enddo
+       qrr=sqrt(qrr)
+       qrror=qrr/qrr0
 
 
       if(iprint.eq.1) then
@@ -1020,7 +1029,7 @@ c        write(*,*) 'betap', betap
       endif
 
       beti=1./betap !*(1-line)
-c     write(*,*) 'beti', beti
+      write(*,*) 'beti', beti
 
       IF(IFLG.EQ.2) THEN
        betap=0.5
@@ -1105,15 +1114,15 @@ c     write(*,*) 'beti', beti
 
        il=nm1-1  ! remove compiler wornings for exceed array dimension
        do j=1,m
-        p(il+1,j)=0.
+        p(nm1,j)=0.
         p(il,j)=f(il,j)
-        q(il+1,j,1)=0.
+        q(nm1,j,1)=0.
         q(il,j,1)=g(il,j,1)
-        q(il+1,j,2)=1.
+        q(nm1,j,2)=1.
         q(il,j,2)=0.
-        q(il+1,j,3)=0.
+        q(nm1,j,3)=0.
         q(il,j,3)=g(il,j,2)
-        q(il+1,j,4)=0.
+        q(nm1,j,4)=0.
         q(il,j,4)=e(il,j)
        enddo
 
@@ -1156,6 +1165,7 @@ c     write(*,*) 'beti', beti
         det40=d11*det3(d22,d23,d24,d32,d33,d34,d42,d43,d44)
      .       -d21*det3(d12,d13,d14,d32,d33,d34,d42,d43,d44)
      .       +d31*det3(d12,d13,d14,d22,d23,d24,d42,d43,d44)
+     .       -d41*det3(d12,d13,d14,d22,d23,d24,d32,d33,d34)
         deti=1./det40
         det41=s1 *det3(d22,d23,d24,d32,d33,d34,d42,d43,d44)
      .       -s2 *det3(d12,d13,d14,d32,d33,d34,d42,d43,d44)
@@ -1797,8 +1807,8 @@ c     IM=I-K+(N-(I-K))/N*(N-2)
       abswidth=pi/64.*3   !RHW4
 !     atau=2.*(9.*2.*DT)
 !     atau=(2.*DT) ! RHW4
-!     atau=200.*DT ! RHW4
-      atau=2.*DT    !Zonal flow past Earth orography
+      atau=200.*DT ! RHW4
+!     atau=2.*DT    !Zonal flow past Earth orography
       alpha=1./atau
 
       ymax = 0.5*pi
@@ -2310,7 +2320,7 @@ c     PARAMETER(N=258,M=128)
       COMMON/INITCON/ U0(N,M),V0(N,M),PT0(N,M),PD0(N,M),P0(N,M)
       COMMON/INITVLS/ PTTRL2,PTTRLI,VLTRL2,VLTRLI,PDTRL2,PDTRLI
       COMMON/DISPL/ TIME,USCAL,DX,DY,H00,HMTS,DT
-      COMMON/ITERO/ ERROR,EXITCND,NITER,NITSM,ICOUNT
+      COMMON/ITERO/ ERROR,QRROR,EXITCND,NITER,NITSM,ICOUNT
       COMMON/ELLIPS/ EPS,ITR,ITMN,IPRC
       COMMON/COMP/ XLP,SUM0,SUMT
       DATA GR,ER/9.80616,6371.22E+03/
@@ -2369,8 +2379,10 @@ CHECK COURANT NUMBERS
   302 FORMAT(4X,'PDMX,PDMN,PDAV:',3E11.4,' SUMER:',E11.4)
 
       NITAV=NITSM/MAX0(ICOUNT,1)
-      PRINT 303, ERROR,NITER,NITAV
-  303 FORMAT(4X,'ERROR:',E11.4,1X,'NITER, NITAV (GCR ITERATIONS):',2I4)
+      PRINT 303, NITER,NITAV
+      PRINT 304, ERROR,QRROR
+  303 FORMAT(4X,'NITER, NITAV (GCR ITERATIONS):',2I4)
+  304 FORMAT(4X,'ERROR,QRROR:',2E11.4)
 
       IF(IRHW.EQ.1) 
      &  CALL RHWT(U0,V0,PT0,PD0,P0,COR,S,X,XX,Y,N,M,GR,ER,TIMSI)
