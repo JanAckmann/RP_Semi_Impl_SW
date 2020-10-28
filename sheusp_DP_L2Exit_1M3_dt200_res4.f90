@@ -209,13 +209,13 @@ stencil=0
 
 
 do ID_PREC=7,7,-5
- do IRHW = 1,1
+ do IRHW = 1,3,2
 
   do DP_Depth=0,0,2
    write(Dp_depth_str,*) DP_Depth
 
   !ID_PREC=0
-   EXP_NAME= 'data/sheusp_SP_L2Exit_1M3_dt200_res4'
+   EXP_NAME= 'data/sheusp_DP_L2Exit_1M3_dt200_res4'
   ! EXP_NAME= 'data_ADI_Precon_init23'
 
 
@@ -274,7 +274,7 @@ mpfl=999999
 elseif(IRHW==1) then
 !DATA NT,NPRINT/12096,864/
 NT = 6376 !int(6376*(200.0/240.0)) !12960  
-NPRINT =797 !797 !int(797*(200.0/240.0)) !864
+NPRINT =200 !797 !797 !int(797*(200.0/240.0)) !864
 DT_23=200.0d0
 KMX=4
 atau=200.*DT_23 ! RHW4
@@ -282,7 +282,7 @@ mpfl=999999
 elseif(IRHW==3) then
 !DATA NT,NPRINT/12096,864/
 NT = 6376 !int(6376*(200.0/240.0)) !12960  
-NPRINT = 797 !797 !797 !int(797*(200.0/240.0)) !864
+NPRINT = 200 !797 !797 !797 !int(797*(200.0/240.0)) !864
 DT_23=200.0d0
 KMX=4
 atau=2.*DT_23    !Zonal flow past Earth orography
@@ -504,7 +504,7 @@ IF(IRHW.EQ.2) CALL INITZON(U_23,V_23,PT_HP,COR_23,X_23,Y_23,N,M,F0_23,BETA_23,H0
 IF(IRHW.EQ.3) CALL INITZON(U_23,V_23,PT_HP,COR_23,X_23,Y_23,N,M,F0_23,BETA_23,H00_23,R_23,PVEL_23)
 
 If (QRelax) then
-CALL POLARABS(Alp_REL,atau,Y_23,DT_23,N,M)
+CALL POLARABS(Alp_REL,atau,Y_23,DT_23,N,M,IRHW)
 else
 Alp_REL(:,:)=0.0d0
 endif
@@ -5435,7 +5435,7 @@ ENDIF
 END SUBROUTINE
 
 
-SUBROUTINE POLARABS(ALP,atau,Y,DT,N,M)
+SUBROUTINE POLARABS(ALP,atau,Y,DT,N,M,IRHW)
 use implicit_functions_DP
 
 implicit none
@@ -5443,7 +5443,7 @@ implicit none
 DOUBLE PRECISION :: ALP(N,M)
  
 DOUBLE PRECISION :: Y(M), DT
-INTEGER :: N, M
+INTEGER :: N, M, IRHW
 
 DOUBLE PRECISION :: eps, pi, abswidth, atau, alpha, &
        & ymax, ymin, absy0_north, absy0_south, y0, y1, y2
@@ -5459,6 +5459,11 @@ eps=1.e-10
 pi=acos(-1.)
 abswidth=pi/64.*3   !RHW4
 !     atau=2.*(9.*2.*DT)
+if (IRHW==1) then
+      atau=200.*DT ! RHW4
+elseif (IRHW==3) then
+     atau=2.*DT    !Zonal flow past Earth orography
+endif
 
 alpha=1./atau
 

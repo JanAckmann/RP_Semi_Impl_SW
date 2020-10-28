@@ -6,7 +6,7 @@ module implicit_functions_SP
                                                                                                       
   REAL(kind=4), PUBLIC :: RPE_0,RPE_1,RPE_05,RPE_025,RPE_0125,RPE_2,RPE_3,RPE_4 , rpe_100                                 
   INTEGER, PUBLIC :: size_of_sum
-  LOGICAL, PUBLIC :: global_sum_fix
+  LOGICAL, PUBLIC :: global_sum_fix, comp_with_dp
  contains                                                                                              
                                                                                                       
   SUBROUTINE rpenum_init(sbits)    
@@ -15,6 +15,9 @@ module implicit_functions_SP
     
     global_sum_fix=.true.
     size_of_sum=512
+
+
+    comp_with_dp=.false.
 
     rpe_1 = 1.0                                                                          
     rpe_2 = 2.0  
