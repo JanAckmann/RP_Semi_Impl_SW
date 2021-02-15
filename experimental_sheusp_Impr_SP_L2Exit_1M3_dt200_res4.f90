@@ -66,7 +66,7 @@ REAL(Kind=4) :: sum_time, sum_lp_time
 
 !!! store old values in low prec. to calc final tend.
 
-REAL(Kind=4) ::     &
+REAL(Kind=4) ::    PD_T(N,M), &
                   & QX_T(N,M), &
                   & QY_T(N,M), &
                   & PC_T(N,M)
@@ -86,7 +86,7 @@ double precision :: PD_HP(N,M), &
                & VA_dp(N,M+1),  &
                & pd_t_dp(N,M), &        
                & QXS_dp(N,M), QYS_dp(N,M)
-double precision :: PD_T(N,M),Alp_REL_dp(N,M)
+double precision :: Alp_REL_dp(N,M)
           REAL(Kind=4) ::   UA_HP(N,M), &
                   & VA_HP(N,M)
                   
@@ -240,13 +240,13 @@ stencil=0
 
 
 do ID_PREC=7,7,-5
- do IRHW = 1,3,2
+ do IRHW = 3,3,2
 
   do DP_Depth=0,0,2
    write(Dp_depth_str,*) DP_Depth
 
   !ID_PREC=0
-   EXP_NAME= 'data/sheusp_IMPR_SP_L2Exit_1M3_dt200_res4'
+   EXP_NAME= 'data/experimental_sheusp_IMPR_SP_L2Exit_1M3_dt200_res4'
   ! EXP_NAME= 'data_ADI_Precon_init23'
 
 
@@ -287,14 +287,14 @@ mpfl=999999
 elseif(IRHW==1) then
 !DATA NT,NPRINT/12096,864/
 NT = 6376 !int(6376*(200.0/240.0)) !12960  
-NPRINT =  797 !797 !797 !int(797*(200.0/240.0)) !864
+NPRINT =797 !797 !int(797*(200.0/240.0)) !864
 DT=200.0d0
 KMX=4
 atau=200.*DT ! RHW4
 mpfl=999999
 elseif(IRHW==3) then
 !DATA NT,NPRINT/12096,864/
-NT = 6376 !int(6376*(200.0/240.0)) !12960  
+NT =  6376 !int(6376*(200.0/240.0)) !12960  
 NPRINT = 797 !797 !797 !int(797*(200.0/240.0)) !864
 DT=200.0d0
 KMX=4
@@ -870,9 +870,6 @@ call prepB_GCR(PD, PT,U(:,:,0), V(:,:,0),PC,P0,F1(:,:,:),  F2(:,:,:), E1(:,:,0),
 
 ! COMPUTE FIRST GUESS FROM ADVECTION
 
-!F1(:,:,1)=F1_dp(:,:,1)
-F1(:,:,1)=PT_HP(:,:)-F1_dp(:,:,1)
-F1_dp(:,:,1)=PT_HP(:,:)-F1_dp(:,:,1)
   CALL  GCR_PRE(PT,F1(:,:,0),F2(:,:,0),HX,HY,S,S_full,F1(:,:,1),F2(:,:,1), &
        &      PD(:,:),E1(:,:,0),E2(:,:,0),COR,IP, &
        &      U(:,:,0),U(:,:,1),V(:,:,0),V(:,:,1),N,M,GC1,GC2,   &
@@ -920,6 +917,8 @@ F1_dp(:,:,1)=PT_HP(:,:)-F1_dp(:,:,1)
     !   &      E1_dp(:,:,0),E2_dp(:,:,0),HX_dp,HY_dp,dble(COR),N,M,IP,GC1_dp,GC2_dp,Alp_REL_dp,1,1)
      F1(:,:,0)=F1_dp(:,:,0)
      F2(:,:,0)=F2_dp(:,:,0)
+    CALL PRFORC_ABS_imp(PT_HP,F1(:,:,0),F2(:,:,0),PD,F2(:,:,1), &
+       &      E1(:,:,0),E2(:,:,0),HX,HY,COR,N,M,IP,GC1,GC2,Alp_REL,1,1)
   else
     CALL PRFORC(PT,F1(:,:,0),F2(:,:,0),PD,F2(:,:,1), &
       &      E1(:,:,0),E2(:,:,0),HX,HY,COR,N,M,IP,GC1,GC2,1,1)
@@ -1005,16 +1004,20 @@ QY_old(:,:)=QY_HP(:,:)
             & F1(:,:,0),F2(:,:,0),E1(:,:,0),E2(:,:,0), &
             & HX,HY,GH1,GH2,DHX2Y,COR, ALP_REL,EP, &
            & IP,IPS, KT,N, M)
-      call compute_new_Forces_dp(PT_HP,PD_HP,QX_HP,QY_HP,&                                
-              & dble(QXS),dble(QYS),   &
-              & F1_dp(:,:,0),F2_dp(:,:,0),E1_dp(:,:,0),E2_dp(:,:,0), &
-              & dble(HX),dble(HY),dble(GH1),dble(GH2),&
-              & dble(DHX2Y),dble(COR), ALP_REL_dp,dble(EP), &
-              & IP,IPS, KT,N, M)
-        F1(:,:,0)=F1_dp(:,:,0)
-        F2(:,:,0)=F2_dp(:,:,0)
-        E1(:,:,0)=E1_dp(:,:,0)
-        E2(:,:,0)=E2_dp(:,:,0) 
+    call compute_new_Forces_dp(PT_HP,PD_HP,QX_HP,QY_HP,&
+            & dble(QXS),dble(QYS),   &
+            & F1_dp(:,:,0),F2_dp(:,:,0),E1_dp(:,:,0),E2_dp(:,:,0), &
+            & dble(HX),dble(HY),dble(GH1),dble(GH2),&
+            & dble(DHX2Y),dble(COR), ALP_REL_dp,dble(EP), &
+            & IP,IPS, KT,N, M)
+      F1(:,:,0)=F1_dp(:,:,0)
+      F2(:,:,0)=F2_dp(:,:,0)
+      E1(:,:,0)=E1_dp(:,:,0)
+      E2(:,:,0)=E2_dp(:,:,0)
+    call compute_new_Forces_imp(PT_HP,PD,QX,QY,QXS,QYS,   &
+            & F1(:,:,0),F2(:,:,0),E1(:,:,0),E2(:,:,0), &
+            & HX,HY,GH1,GH2,DHX2Y,COR, ALP_REL,EP, &
+           & IP,IPS, KT,N, M)
     DO J=1,M
       DO I=1,N
         !write(*,*) F1(I,J,0), F2(I, J,0), F1_dp(I,J,0), F2_dp(I, J,0), E1(I,J,0), E2(I, J,0)
@@ -1352,7 +1355,7 @@ INTEGER :: I, J
 !endif
     DO J=1,M
       DO I=1,N
-        F1(I,J)=-rpe_05*F1(I,J)
+        F1(I,J)=PD(I,J)+P0(I,J)-rpe_05*F1(I,J)
       end do
     end do
 
@@ -1470,6 +1473,53 @@ INTEGER :: I, J
     end subroutine
 
 
+subroutine compute_new_Forces_imp(PT,PD,QX,QY,QXS,QYS,   &
+            & F1,F2,E1,E2, &
+            & HX,HY,GH1,GH2,DHX2Y,COR, ALP_REL,EP, &
+            & IP,IPS, KT,N, M)
+double precision :: PT(N,M), F1_dp(N,M),F2_dp(N,M)
+REAL(Kind=4) :: PD(N,M),QX(N,M),QY(N,M),QXS(N,M),QYS(N,M),   &
+            & F1(N,M),F2(N,M),E1(N,M),E2(N,M), &
+            & HX(N,M),HY(N,M),GH1,GH2,DHX2Y(N,M),COR(N,M), ALP_REL(N,M), EP
+INTEGER :: IP(M), KT,N, M, IPS
+INTEGER :: I, J
+
+
+    CALL PRFC0_dp(PT,F1_dp(:,:),F2_dp(:,:),dble(PD),dble(HX),dble(HY),IP,&
+             & IPS,dble(GH1),dble(GH2),dble(EP),N,M)
+F1(:,:)=F1_dp(:,:)
+F2(:,:)=F2_dp(:,:)
+
+  !  DO J=1,M
+  !    DO I=1,N
+  !       write(*,*)I, J, F2(I,J)
+  !       read(*,*)
+  !     end do
+  !  end do
+
+    DO J=1,M
+      DO I=1,N
+        E1(I,J)=-DHX2Y(I,J)*QX(I,J)*QY(I,J)/PD(I,J)
+        E2(I,J)= DHX2Y(I,J)*QX(I,J)*QX(I,J)/PD(I,J)
+      end do
+    end do
+
+    DO J=1,M
+      DO I=1,N
+        F1(I,J)=F1(I,J)+COR(I,J)*QY(I,J)+E1(I,J)     &
+                   &       -ALP_REL(I,J)*(QX(I,J)-QXS(I,J))
+  !                write(*,*)I, J, F2(I,J)
+  !       read(*,*)
+
+           F2(I,J)=F2(I,J)-COR(I,J)*QX(I,J)+E2(I,J)     &
+                   &       -ALP_REL(I,J)*(QY(I,J)-QYS(I,J))
+
+        ! write(*,*)I, J,F1(I,J), F2(I,J),E1(I,J), E2(I,J)
+        ! read(*,*)
+           end do
+    end do
+
+    end subroutine
 subroutine compute_new_Forces(PT,PD,QX,QY,QXS,QYS,   &
             & F1,F2,E1,E2, &
             & HX,HY,GH1,GH2,DHX2Y,COR, ALP_REL,EP, &
@@ -5063,7 +5113,7 @@ double precision :: p(n1,n2)
 REAL(Kind=4) :: pfx(n1,n2),pfy(n1,n2),hx(n1,n2),hy(n1,n2),s(n1,n2), &
      &   b(n1,n2),pb(n1,n2),p0(n1,n2), S_full,                   &
      &   e1(n1,n2),e2(n1,n2),cor(n1,n2),d(n1,n2),q(n1,n2),r(n1,n2),ar(n1,n2), &
-     &    r_true(n1,n2), r0_true(n1,n2), p_true(n1,n2),r_HP(n1,n2), &
+     &   p_T(n1,n2), r_true(n1,n2), r0_true(n1,n2), p_true(n1,n2),r_HP(n1,n2), &
      &   p0_true(n1, n2), b_true(n1, n2), PMB(n1, n2), PMP0(n1, n2), qr(n1,n2)
 REAL(Kind=4) :: MGH1IHX(n2), MGH2IHY(n2), AC(n2), BC(n2), AD(n2), BD(n2), Alp_REL(n1,n2)
 !! preconditioning
@@ -5096,7 +5146,7 @@ LOGICAL :: codesQ, exiting
 INTEGER :: IRHW , counter
 
 double precision :: err0_dp, errn_dp, beta_dp, ax2_dp(lord), rax_dp, del_dp(lord), axaqu_dp(lord)
-double precision :: p_T(n1,n2),a11_dp(n1,n2),a12_dp(n1,n2),a21_dp(n1,n2), &
+double precision :: a11_dp(n1,n2),a12_dp(n1,n2),a21_dp(n1,n2), &
               &     a22_dp(n1,n2),b11_dp(n1,n2),b22_dp(n1,n2)
 double precision :: r_HP_dp(n1,n2), pfx_dp(n1,n2),pfy_dp(n1,n2), x_dp(n1,n2,lord),ax_dp(n1,n2,lord)
 double precision :: p_dp(n1,n2), p_T_dp(n1,n2), qu_dp(n1,n2),aqu_dp(n1,n2), r0_HP_dp(n1,n2)
@@ -5136,13 +5186,13 @@ p_T_dp(:,:)=0.0d0
 
  DO J=1,n2
    DO I=1,n1
-    PMB(I, J)=b(I,J)
+    PMB(I, J)= p(I,J)-b(I,J)
     PMP0(I,J)= p(I,J)-p0(I,J)
    enddo
  enddo
  DO J=1,n2
    DO I=1,n1
-    PMB_dp(I, J)=b(I,J)
+    PMB_dp(I, J)= p_dp(I,J)-b(I,J)
     PMP0_dp(I,J)= p_dp(I,J)-p0(I,J)
    enddo
  enddo
@@ -5252,14 +5302,14 @@ call cpu_time(startLP)
 err0=rpe_0
  DO J=1,n2
    DO I=1,n1
-     r_HP(I,J)=rpe_05*r_HP(I,J)-(b(I,J))
+     r_HP(I,J)=rpe_05*r_HP(I,J)-(p(I,J)-b(I,J))
    enddo
  enddo
 
 !if(comp_with_dp) then
  DO J=1,n2
    DO I=1,n1
-     r_HP_dp(I,J)=0.5d0*r_HP_dp(I,J)-(dble(b(I,J)))
+     r_HP_dp(I,J)=0.5d0*r_HP_dp(I,J)-(dble(p(I,J))-dble(b(I,J)))
    enddo
  enddo
 r_HP(:,:)=r_HP_dp(:,:)
@@ -5276,25 +5326,18 @@ r_HP(:,:)=r_HP_dp(:,:)
    enddo
  enddo
 
- err0_dp=0.0
- DO J=1,n2
-   DO I=2,n1-1
-      err0_dp=err0_dp+r_HP_dp(I,J)*r_HP_dp(I,J)
-   enddo
- enddo
- write(*,*) 'err0_dp', sqrt(err0_dp)
 ! write(*,*) (maxval(abs(r_HP(:,J))), J=1,n2) 
 
-!if (iprint==1) then
-!    call write_L2r0(dble(sqrt(err0),&
-!     & dble(sqrt(global_sqsums(r_HP,r_HP,n1,n2,size_of_sum,2,N1-1,1,n2))), dble(TIME), &
-!            &  codesQ, codes, IRHW, num_of_bits, 9 ,EXP_NAME)
-!endif
-   write(*,*) 'normal err0' ,sqrt(err0)
+if (iprint==1) then
+    call write_L2r0(dble(sqrt(err0/((n1-2)*n2))),&
+     & dble(sqrt(global_sqsums(r_HP/((n1-2)*n2),r_HP,n1,n2,size_of_sum,2,N1-1,1,n2))), dble(TIME), &
+            &  codesQ, codes, IRHW, num_of_bits, 9 ,EXP_NAME)
+endif
+   write(*,*) 'normal err0' ,sqrt(err0/((n1-2)*n2))
     err0=sqrt(err0)
 ! IF(global_sum_fix) then
     err0=sqrt(global_sqsums(r_HP,r_HP,n1,n2,size_of_sum,2,N1-1,1,n2))
-   write(*,*) 'corrected err0', sqrt(global_sqsums(r_HP,r_HP,n1,n2,size_of_sum,2,N1-1,1,n2))
+   write(*,*) 'corrected err0', sqrt(global_sqsums(r_HP/((n1-2)*n2),r_HP,n1,n2,size_of_sum,2,N1-1,1,n2))
 !  endif
     errnm1=err0
 
@@ -5368,10 +5411,10 @@ do it=1,itr
         DO I=1,n1
          p_T(I,J)=p_T(I,J) +beta* x(I,J,l) 
          ! p(I,J)=p(I,J) +beta* x(I,J,l)! done outside with p(:,:)+p_T(:,:) 
-         r_HP_dp(I,J)  =r_HP_dp(I,J)   +beta*ax(I,J,l) 
+         r_HP(I,J)  =r_HP(I,J)   +beta*ax(I,J,l) 
         enddo
       enddo
-r_HP(:,:)=r_HP_dp(:,:)
+
 !  IF(global_sum_fix) then
     errn      =global_sqsums(r_HP,r_HP,n1,n2,size_of_sum,2,N1-1,1,n2)
 !  endif
@@ -5380,14 +5423,14 @@ r_HP(:,:)=r_HP_dp(:,:)
 
 !!! begin true residual
 r_true_dp(:,:)=0.0d0
-  CALL PRFORC_ABS_dp(dble(p_true_dp(:,:))+dble(p_T(:,:)),pfx_dp,pfy_dp,dble(pb),dble(p0), &
+  CALL PRFORC_ABS_dp(dble(p_true(:,:))+dble(p_T(:,:)),pfx_dp,pfy_dp,dble(pb),dble(p0), &
        &      dble(E1(:,:)),dble(E2(:,:)),dble(HX),dble(HY),dble(COR), &
        &      n1,n2,IP,dble(GC1),dble(GC2),dble(Alp_REL),1,1)
   call diver_dp(r_true_dp,pfx_dp,pfy_dp,dble(hx),dble(hy),dble(s),n1,n2,ip,-1)
 
 DO J=1,n2
   DO I=1,n1
-    r_true_dp(I,J)=0.5d0*r_true_dp(I,J)-(dble(p_T(I,J))+dble(b(I,J)))
+    r_true_dp(I,J)=0.5d0*r_true_dp(I,J)-(dble(p_true(I,J))+dble(p_T(I,J))-dble(b_true(I,J)))
  ! write(*,*), i, J, P(i,J)
   enddo
 enddo
@@ -5398,11 +5441,11 @@ enddo
         enddo
       enddo
 
-write(*,*) 'True Residual', sqrt(err_true_dp), sqrt(err_true_dp)/err0 
+write(*,*) 'True Residual', sqrt(err_true_dp), sqrt(err_true_dp)/err0_dp 
 !!! end true residual
 
 if (iprint==1) then
-    call write_residual(real(r_true_dp),eps*Exit_cond, niter+1, TIME, &
+    call write_residual(r_HP,eps*Exit_cond, niter+1, TIME, &
             &  codesQ, codes, IRHW, DX_rpe, DY_rpe, n1, n2, num_of_bits, 9 ,EXP_NAME)
 endif
 
@@ -5825,14 +5868,14 @@ call cpu_time(startLP)
 err0=rpe_0
  DO J=1,n2
    DO I=1,n1
-     r_HP(I,J)=rpe_05*r_HP(I,J)-(b(I,J))
+     r_HP(I,J)=rpe_05*r_HP(I,J)-(p(I,J)-b(I,J))
    enddo
  enddo
 
 !if(comp_with_dp) then
  DO J=1,n2
    DO I=1,n1
-     r_HP_dp(I,J)=0.5d0*r_HP_dp(I,J)-(dble(b(I,J)))
+     r_HP_dp(I,J)=0.5d0*r_HP_dp(I,J)-(dble(p(I,J))-dble(b(I,J)))
    enddo
  enddo
   r0_HP_dp(:,:)=r_HP_dp(:,:)
@@ -6054,7 +6097,7 @@ r_true_dp(:,:)=0.0d0
 
 DO J=1,n2
   DO I=1,n1
-    r_true_dp(I,J)=0.5d0*r_true_dp(I,J)-(dble(p_T(I,J))+dble(b(I,J)))
+    r_true_dp(I,J)=0.5d0*r_true_dp(I,J)-(dble(p_true(I,J))+dble(p_T(I,J))-dble(b_true(I,J)))
  ! write(*,*), i, J, P(i,J)
   enddo
 enddo
@@ -8601,6 +8644,76 @@ ENDIF
 
 END SUBROUTINE
 
+SUBROUTINE PRFORC_ABS_imp( P,F1,F2,PB,P0,E1,E2,HX,HY,COR,       &
+     &            N,M,IP,GC1,GC2,Alp_REL, NOR,IRS)
+use implicit_functions_dp
+
+implicit none
+double precision :: P(N,M)
+REAL(KIND=4):: F1(N,M),F2(N,M),PB(N,M),P0(N,M),E1(N,M),E2(N,M), &
+     & HX(N,M),HY(N,M),COR(N,M)
+ REAL(KIND=4):: GC1, GC2
+ REAL(KIND=4)::Alp_REL(N,M)
+
+INTEGER  :: IP(N)
+INTEGER  :: N, M, NOR, IRS
+
+
+INTEGER :: I, J, NM
+
+ REAL(KIND=4) :: GH1, GH2, UTILD, VTILD, GMM, AMM, DETI, A, B
+call rpenum_init(0)
+GH1=rpe_05*GC1
+GH2=rpe_05*GC2
+
+DO J=2,M-1
+  DO I=2,N-1
+    F1(I,J)=-GH1*(P(I+1,J)-P(I-1,J))/HX(I,J)
+    F2(I,J)=-GH2*(P(I,J+1)-P(I,J-1))/HY(I,J)
+  end do
+end do
+   
+DO I=2,N-1
+  F1(I,1)=-GH1*(P(I+1,1)-P(I-1,1))/HX(I,1)
+  F1(I,M)=-GH1*(P(I+1,M)-P(I-1,M))/HX(I,M)
+  F2(I,1)=-GH2*(P(I,2)-P(IP(I),1))/HY(I,1)
+  F2(I,M)=-GH2*(P(IP(I),M)-P(I,M-1))/HY(I,M)
+end do
+
+CALL XBC(F1,N,M)
+CALL XBC(F2,N,M)
+
+IF(NOR.EQ.1) THEN
+!  NM=N*M
+  
+!  DO I=1,NM
+!    UTILD=F1(I,1)*(P0(I,1)-PB(I,1))+(P(I,1)-IRS*P0(I,1))*E1(I,1)
+!    VTILD=F2(I,1)*(P0(I,1)-PB(I,1))+(P(I,1)-IRS*P0(I,1))*E2(I,1)
+!    GMM=.5*COR(I,1)
+!    F1(I,1)=(UTILD+GMM*VTILD)/(1.+GMM**2)*GH1
+!    F2(I,1)=(VTILD-GMM*UTILD)/(1.+GMM**2)*GH2
+!  end do
+  DO J=1,M
+    DO I=1,N
+      UTILD=F1(I,J)*(P0(I,J)-PB(I,J))+(P(I,J)-IRS*P0(I,J))*E1(I,J)
+      VTILD=F2(I,J)*(P0(I,J)-PB(I,J))+(P(I,J)-IRS*P0(I,J))*E2(I,J)
+      
+      AMM=1.+.5*Alp_REL(I,J)
+      GMM=.5*COR(I,J)
+      DETI=1./(AMM**2+GMM**2)
+      
+      A=AMM*DETI
+      B=GMM*DETI
+
+      F1(I,J)=(A*UTILD+B*VTILD)*GH1
+      F2(I,J)=(A*VTILD-B*UTILD)*GH2
+    end do
+  end do
+CALL XBC(F1,N,M)
+CALL XBC(F2,N,M)
+ENDIF
+
+END SUBROUTINE
 SUBROUTINE PRFORC_ABS_dp( P,F1,F2,PB,P0,E1,E2,HX,HY,COR,       &
      &            N,M,IP,GC1,GC2,Alp_REL, NOR,IRS)
 use implicit_functions_dp
@@ -8850,12 +8963,15 @@ implicit none
         do ii=2,n-1
           read(33,*) i,j,flon,flat,tp0(i,j)
 
-!     print*, i,j,flon,flat,tp0(i,j)
+   !  print*, i,j,flon,flat,tp0(i,j)
           h0(i+1,j)=tp0(i,j)
         enddo
       enddo
       call xbc(h0,n,m)
-
+   ! do j=1,m
+   !   write(*,*)j, h0(:,j)
+   !   read(*,*)
+   ! enddo
       h0mx=-1.e15
       h0mn= 1.e15
       do j=1,m
@@ -9201,7 +9317,7 @@ endif
 err0=rpe_0
  DO J=1,n2
    DO I=1,n1
-     r_HP(I,J)=rpe_05*r_HP(I,J)-(b(I,J))
+     r_HP(I,J)=rpe_05*r_HP(I,J)-(p(I,J)-b(I,J))
    enddo
  enddo
 
@@ -9298,7 +9414,7 @@ r_true_dp(:,:)=0.0d0
 
 DO J=1,n2
   DO I=1,n1
-    r_true_dp(I,J)=0.5d0*r_true_dp(I,J)-(dble(p_T(I,J))+dble(b_true(I,J)))
+    r_true_dp(I,J)=0.5d0*r_true_dp(I,J)-(dble(p_true(I,J))+dble(p_T(I,J))-dble(b_true(I,J)))
  ! write(*,*), i, J, P(i,J)
   enddo
 enddo

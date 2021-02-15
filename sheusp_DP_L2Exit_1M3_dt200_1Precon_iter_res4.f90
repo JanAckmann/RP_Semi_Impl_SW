@@ -209,13 +209,13 @@ stencil=0
 
 
 do ID_PREC=7,7,-5
- do IRHW = 1,3,2
+ do IRHW = 3,3,2
 
   do DP_Depth=0,0,2
    write(Dp_depth_str,*) DP_Depth
 
   !ID_PREC=0
-   EXP_NAME= 'data/sheusp_DP_L2Exit_1M3_dt200_res4'
+   EXP_NAME= 'data/sheusp_DP_L2Exit_1M3_dt200_1Preconiter_res4'
   ! EXP_NAME= 'data_ADI_Precon_init23'
 
 
@@ -4608,7 +4608,7 @@ INTEGER :: I, J, iteration, i2, il1, il2
 
 
 
-max_iter=2
+max_iter=1
 swcp=rpe_1
 !initialize the inverse of R with 0
 DO J=1,M

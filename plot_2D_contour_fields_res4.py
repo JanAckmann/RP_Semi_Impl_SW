@@ -35,7 +35,8 @@ path=  'data_ADI_Precon/'
 
 #path_true='../data/data_ADI_LinfPhiEXIT1M10_Dp_refInst_dt200_res8/'
 #path_ref='../data/data_ADI_LinfPhiEXIT1M10_Dp_refInst_dt200_res4/'
-pathlist= ['../data/sheusp_SP_L2Exit_1M3_dt200_res4/'] # '../data/data_ADI_NOTgcr_D6_2M4_RP_res4/'
+pathlist= ['../data/sheusp_DP_L2Exit_1M3_dt200_res4/'] # '../data/data_ADI_NOTgcr_D6_2M4_RP_res4/'
+#pathlist= ['../data/sheusp_IMPR_SP_L2Exit_1M3_dt200_res4_speed/'] # '../data/data_ADI_NOTgcr_D6_2M4_RP_res4/'
 
 
 
@@ -75,7 +76,7 @@ new_cmap = truncate_colormap(cmap, 0.15, 1.0)
 ############## MAIN PROGRAMM ###################### 
 for path in pathlist: 
 
-    for Precon in range(5,6,5): 
+    for Precon in range(7,8,5): 
 
         pdf_pages = PdfPages(path+'H_U_V_'+'Precon'+str(Precon)+'_exp'+str(exp)+'_codes_'+codesQ+codesD+'DP.pdf')
         for P_steps in range(len(times)):
@@ -119,7 +120,12 @@ for path in pathlist:
             plt.xlabel('lon', fontsize=18)
             plt.ylabel('lat', fontsize=18)
             #if (var == 'V'):
-            plt.contour(grid_var, 20, extent=(xcoord.min(), xcoord.max(), 
+            if (exp == '1'):
+             plt.contour(grid_var, 11, extent=(xcoord.min(), xcoord.max(), 
+               ycoord.min(), ycoord.max()),
+               interpolation='None', colors='black', vmin=np.amin((grid_var)), vmax=np.amax(grid_var))
+            elif (exp == '3'):
+             plt.contour(grid_var, 20, extent=(xcoord.min(), xcoord.max(), 
                ycoord.min(), ycoord.max()),
                interpolation='None', colors='black', vmin=np.amin((grid_var)), vmax=np.amax(grid_var))
             q= plt.quiver(grid_xcoord[::16, ::16],grid_ycoord[::16, ::16], grid_varU[::16, ::16],grid_varV[::16, ::16], pivot='mid')

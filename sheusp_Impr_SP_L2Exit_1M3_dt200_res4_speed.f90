@@ -218,13 +218,13 @@ double precision ::  U_dp(N,M,0:1),&
                   & r_eval(N,M),&
                   & err_fin, &
                & E1_dp(N,M,-1:0), &
-               & E2_dp(N,M,-1:0)
+               & E2_dp(N,M,-1:0), start, finish
        double precision :: F0_dp, G_dp, GI_dp, R_dp,PI_dp, PI2_dp, PIH_dp,&
         &  DX_dp, DY_dp, GC1_dp, GC2_dp, GH1_dp, GH2_dp,&
         & Y_dp(M+1), X_dp(N),HX_dp(N,M), HY_dp(N,M),S_dp(N,M), DHX2Y_dp(N,M)
 mountain = .false.
  !!! RPE VARIABLES
-
+call cpu_time(start)
 
 
   codesignQ = .true.
@@ -246,7 +246,7 @@ do ID_PREC=7,7,-5
    write(Dp_depth_str,*) DP_Depth
 
   !ID_PREC=0
-   EXP_NAME= 'data/sheusp_IMPR_SP_L2Exit_1M3_dt200_res4'
+   EXP_NAME= 'data/sheusp_IMPR_SP_L2Exit_1M3_dt200_res4_speed'
   ! EXP_NAME= 'data_ADI_Precon_init23'
 
 
@@ -286,16 +286,16 @@ KMX=4
 mpfl=999999
 elseif(IRHW==1) then
 !DATA NT,NPRINT/12096,864/
-NT = 6376 !int(6376*(200.0/240.0)) !12960  
-NPRINT =  797 !797 !797 !int(797*(200.0/240.0)) !864
+NT = 6400 ! 6376 !int(6376*(200.0/240.0)) !12960  
+NPRINT = 6500 ! 797 !797 !797 !int(797*(200.0/240.0)) !864
 DT=200.0d0
 KMX=4
 atau=200.*DT ! RHW4
 mpfl=999999
 elseif(IRHW==3) then
 !DATA NT,NPRINT/12096,864/
-NT = 6376 !int(6376*(200.0/240.0)) !12960  
-NPRINT = 797 !797 !797 !int(797*(200.0/240.0)) !864
+NT = 6400 ! 6376 !int(6376*(200.0/240.0)) !12960  
+NPRINT = 6500 !797 !797 !797 !int(797*(200.0/240.0)) !864
 DT=200.0d0
 KMX=4
 atau=2.*DT    !Zonal flow past Earth orography
@@ -374,14 +374,14 @@ IF(IRHW.EQ.1) CALL INITRHW(U(:,:,0),V(:,:,0),PT_HP,COR,X,Y,N,M,F0,R)
 IF(IRHW.EQ.2) CALL INITZON(U(:,:,0),V(:,:,0),PT_HP,COR,X,Y,N,M,F0,BETA,H00,R,PVEL)
 IF(IRHW.EQ.3) CALL INITZON(U(:,:,0),V(:,:,0),PT_HP,COR,X,Y,N,M,F0,BETA,H00,R,PVEL)
 
-IF(IRHW.EQ.0) CALL INITZON_dp(U_dp(:,:,0),V_dp(:,:,0),PT_HP,COR_dp,X_dp,Y_dp,N,M,F0_dp,dble(BETA),dble(H00),R_dp,dble(PVEL))
-IF(IRHW.EQ.1) CALL INITRHW_dp(U_dp(:,:,0),V_dp(:,:,0),PT_HP,COR_dp,X_dp,Y_dp,N,M,F0_dp,R_dp)
-IF(IRHW.EQ.2) CALL INITZON_dp(U_dp(:,:,0),V_dp(:,:,0),PT_HP,COR_dp,X_dp,Y_dp,N,M,F0_dp,dble(BETA),dble(H00),R_dp,dble(PVEL))
-IF(IRHW.EQ.3) CALL INITZON_dp(U_dp(:,:,0),V_dp(:,:,0),PT_HP,COR_dp,X_dp,Y_dp,N,M,F0_dp,dble(BETA),dble(H00),R_dp,dble(PVEL))
+!IF(IRHW.EQ.0) CALL INITZON_dp(U_dp(:,:,0),V_dp(:,:,0),PT_HP,COR_dp,X_dp,Y_dp,N,M,F0_dp,dble(BETA),dble(H00),R_dp,dble(PVEL))
+!IF(IRHW.EQ.1) CALL INITRHW_dp(U_dp(:,:,0),V_dp(:,:,0),PT_HP,COR_dp,X_dp,Y_dp,N,M,F0_dp,R_dp)
+!IF(IRHW.EQ.2) CALL INITZON_dp(U_dp(:,:,0),V_dp(:,:,0),PT_HP,COR_dp,X_dp,Y_dp,N,M,F0_dp,dble(BETA),dble(H00),R_dp,dble(PVEL))
+!IF(IRHW.EQ.3) CALL INITZON_dp(U_dp(:,:,0),V_dp(:,:,0),PT_HP,COR_dp,X_dp,Y_dp,N,M,F0_dp,dble(BETA),dble(H00),R_dp,dble(PVEL))
 
 If (QRelax) then
 CALL POLARABS(Alp_REL,atau,Y,DT,N,M,IRHW)
-CALL POLARABS_dp(Alp_REL_dp,dble(atau),Y_dp,dble(DT),N,M,IRHW)
+!CALL POLARABS_dp(Alp_REL_dp,dble(atau),Y_dp,dble(DT),N,M,IRHW)
 else
 Alp_REL(:,:)=0.0d0
 endif
@@ -594,11 +594,11 @@ QY_old(:,:)=QY_hp(:,:)
 
 !!! make sure that everything until here is initialized and calculated in REAL(Kind=4)
 !!! before actually being downcasted
-   call init_perf_markers(PD(:,:)+P0(:,:),QX(:,:)/PD(:,:),QY(:,:)/PD(:,:), rpe_0, &
-                   & codesignQ, codesignD, IRHW, X, Y, N, M, num_of_bits, ID_prec, EXP_NAME)
+!   call init_perf_markers(PD(:,:)+P0(:,:),QX(:,:)/PD(:,:),QY(:,:)/PD(:,:), rpe_0, &
+!                   & codesignQ, codesignD, IRHW, X, Y, N, M, num_of_bits, ID_prec, EXP_NAME)
 
-   call write_fields(PD(:,:)+P0(:,:),QX(:,:)/PD(:,:),QY(:,:)/PD(:,:), rpe_0, &
-& codesignQ, codesignD, IRHW, X, Y, N, M, num_of_bits, ID_prec, EXP_NAME)  !PD_HP(:,:)
+!   call write_fields(PD(:,:)+P0(:,:),QX(:,:)/PD(:,:),QY(:,:)/PD(:,:), rpe_0, &
+!& codesignQ, codesignD, IRHW, X, Y, N, M, num_of_bits, ID_prec, EXP_NAME)  !PD_HP(:,:)
   !! end initiate reduced variables
   
   
@@ -646,9 +646,10 @@ ELSE
   end do
 ENDIF
 
-CALL DIAGNOS(QX(:,:)/PD(:,:),QY(:,:)/PD(:,:),PD,&
-                 & PT,HX,HY,IP,S,TIME,DX,DY,DT, SUM0,SUM1, &
-                 & KT,N,M,0, NITER,NITSM,ICOUNT,ERROR, sum_time, sum_lp_time)
+
+!CALL DIAGNOS(QX(:,:)/PD(:,:),QY(:,:)/PD(:,:),PD,&
+!                 & PT,HX,HY,IP,S,TIME,DX,DY,DT, SUM0,SUM1, &
+!                 & KT,N,M,0, NITER,NITSM,ICOUNT,ERROR, sum_time, sum_lp_time)
 
 
       ! plot not yet finished
@@ -666,7 +667,7 @@ IF(IANAL.EQ.0) THEN
     else
       liner=0
     endif
-    write(*,*)'Timestep', kt, int(float(kt)/float(mpfl))*mpfl, liner
+    !write(*,*)'Timestep', kt, int(float(kt)/float(mpfl))*mpfl, liner
     IPRINT=0
     IF(KT/NPRINT*NPRINT.EQ.KT) IPRINT=1
     !if (IPRINT==1) then
@@ -675,19 +676,21 @@ IF(IANAL.EQ.0) THEN
     !endif
     ! COMPUTE ADVECTIVE COURANT NUMBERS
     ! COMPUTE VELOCITY PREDICTOR
-     If (kt==1) then
-      F1_dp(:,:,:)=F1(:,:,:)
-      F2_dp(:,:,:)=F2(:,:,:)
-      U_dp(:,:,:)=U(:,:,:)
-      V_dp(:,:,:)=V(:,:,:)
-     endif
+  !   If (kt==1) then
+  !    F1_dp(:,:,:)=F1(:,:,:)
+  !    F2_dp(:,:,:)=F2(:,:,:)
+  !    U_dp(:,:,:)=U(:,:,:)
+  !    V_dp(:,:,:)=V(:,:,:)
+  !   endif
  !  If (.not. comp_with_dp) then
     CALL VELPRD(U,V,F1,F2,PD,HX,HY,IP,N,M,GC1,GC2,EP, KMX)
  !   endif
 !   If (comp_with_dp) then
 !    CALL VELPRD_IMP(U,V,F1,F2,PD,HX,HY,IP,N,M,GC1,GC2,EP, KMX)
-    CALL VELPRD_dp(U_dp,V_dp,F1_dp,F2_dp,PD_HP,&
-      &HX_dp,HY_dp,IP,N,M,GC1_dp,GC2_dp,dble(EP), KMX)
+! comment
+!    CALL VELPRD_dp(U_dp,V_dp,F1_dp,F2_dp,PD_HP,&
+!      &HX_dp,HY_dp,IP,N,M,GC1_dp,GC2_dp,dble(EP), KMX)
+
 !
 !        write(*,*) 'velprd', norm(U(:,:,1),U_dp(:,:,1),n,m,2,N-1,1,M,2), &
 !                  & norm(U(:,:,1),U_dp(:,:,1),n,m,2,N-1,1,M,1) ,&
@@ -722,28 +725,6 @@ IF(IANAL.EQ.0) THEN
       VA(I,M+1)=rpe_0
     end do
 
-    DO J=1,M
-      DO I=1,N
-        U_dp(I,J,1)=U_dp(I,J,1)*HY(I,J)
-        V_dp(I,J,1)=V_dp(I,J,1)*HX(I,J)
-      end do
-    end do
-    ! COMPUTE COURANT NUMBERS AT STAGGERED TIME/SPACE POSITIONS
-    DO J=1,M
-      DO I=2,N-1
-        UA_dp(I,J)=(U_dp(I,J,1)+U_dp(I-1,J,1))*GH1
-      end do
-    end do
-
-    CALL XBC_dp(UA_dp,N,M)
-
-    DO I=1,N
-      DO J=2,M
-        VA_dp(I,J)=(V_dp(I,J,1)+V_dp(I,J-1,1))*GH2
-      end do
-      VA_dp(I,  1)=0.0d0
-      VA_dp(I,M+1)=0.0d0
-    end do
 ! CLOSE ADVECTIVE COURANT NUMBERS
 
 ! COLLECT EXPLICIT PARTS OF CONTINUITY AND MOMENTUM EQUATIONS:
@@ -751,13 +732,13 @@ IF(IANAL.EQ.0) THEN
    call prepA_GCR(PD,QX(:,:),QY(:,:),P0,F1(:,:,1), &
                & HX,HY,GC1,GC2,S,N,M,IP)  
 
-   call prepA_GCR_dp(PD_HP,QX_HP(:,:),QY_HP(:,:),P0_HP,F1_dp(:,:,1), &
-               & HX_dp,HY_dp,GC1_dp,GC2_dp,S_dp,N,M,IP)  
+!   call prepA_GCR_dp(PD_HP,QX_HP(:,:),QY_HP(:,:),P0_HP,F1_dp(:,:,1), &
+!               & HX_dp,HY_dp,GC1_dp,GC2_dp,S_dp,N,M,IP)  
 
       
    ! F1(:,:,1)=  F1_dp(:,:,1)
 ! C--->                       ADVECTION
- call add_OldForces(QX, QY,F1(:,:,0), F2(:,:,0) , N, M)
+! call add_OldForces(QX, QY,F1(:,:,0), F2(:,:,0) , N, M)
 
 ! call add_OldForces_dp(QX_HP, QY_HP,F1_dp(:,:,0), F2_dp(:,:,0) , N, M)
  call add_OldForces_dp(QX_HP, QY_HP,dble(F1(:,:,0)), dble(F2(:,:,0)) , N, M)
@@ -810,8 +791,8 @@ IF(IANAL.EQ.0) THEN
    IF(QRelax) then !! define reference values for polar absorbers
     IF(IRHW==1) then
       call update_relax(QXS, QYS, U0,V0,PT0,PD0,P0,COR,X,Y,N,M,F0,R,KT*DT)     
-      call update_relax_dp(QXS_dp, QYS_dp, dble(U0),dble(V0),dble(PT0),dble(PD0)&
-              & ,dble(P0),dble(COR),dble(X),dble(Y),N,M,dble(F0),dble(R),dble(KT*DT))
+!      call update_relax_dp(QXS_dp, QYS_dp, dble(U0),dble(V0),dble(PT0),dble(PD0)&
+!              & ,dble(P0),dble(COR),dble(X),dble(Y),N,M,dble(F0),dble(R),dble(KT*DT))
      ! QXS_dp(:,:)=QXS(:,:)     
      ! QYS_dp(:,:)=QYS(:,:)     
     ENDIF
@@ -820,29 +801,29 @@ IF(IANAL.EQ.0) THEN
    endif
 
 !--->                CORIOLIS AND METRIC FORCES
- call add_NewForcesA(QX, QY, U(:,:,0), V(:,:,0), E1(:,:,:), E2(:,:,:) &
-   &,COR,GC1, GC2, Alp_REL,QXS, QYS, N, M)
+! call add_NewForcesA(QX, QY, U(:,:,0), V(:,:,0), E1(:,:,:), E2(:,:,:) &
+!   &,COR,GC1, GC2, Alp_REL,QXS, QYS, N, M)
     
  call add_NewForcesA_dp(QX_HP, QY_HP, dble(U(:,:,0)), dble(V(:,:,0)), dble(E1(:,:,:)),dble( E2(:,:,:)) &
    &,dble(COR),dble(GC1), dble(GC2),dble( Alp_REL),dble(QXS), dble(QYS), N, M)
 ! call add_NewForcesA_dp(QX_HP, QY_HP, U_dp(:,:,0),  V_dp(:,:,0), E1_dp(:,:,:), E2_dp(:,:,:) &
 !   &,dble(COR),dble(GC1), dble(GC2),dble( Alp_REL),dble(QXS),dble( QYS), N, M)
     
-      DO J=1,M
-        DO I=1,N
-         U(I,J,0)= QX(I,J)*GC1
-         V(I,J,0)= QY(I,J)*GC2
-         U_dp(I,J,0)= QX_HP(I,J)*GC1_dp
-         V_dp(I,J,0)= QY_HP(I,J)*GC2_dp
-        end do
-      end do
-
+ !     DO J=1,M
+ !       DO I=1,N
+ !        U(I,J,0)= QX(I,J)*GC1
+ !        V(I,J,0)= QY(I,J)*GC2
+ !        U_dp(I,J,0)= QX_HP(I,J)*GC1_dp
+ !        V_dp(I,J,0)= QY_HP(I,J)*GC2_dp
+ !       end do
+ !     end do
+!
       DO J=1,M
        DO I=1,N
          E1(I,J,-1)=E1(I,J,0)
          E2(I,J,-1)=E2(I,J,0)
-         E1_dp(I,J,-1)=E1_dp(I,J,0)
-         E2_dp(I,J,-1)=E2_dp(I,J,0)
+!         E1_dp(I,J,-1)=E1_dp(I,J,0)
+!         E2_dp(I,J,-1)=E2_dp(I,J,0)
        end do 
      end do
 
@@ -863,33 +844,33 @@ IF(IANAL.EQ.0) THEN
 
 call prepB_GCR(PD, PT,U(:,:,0), V(:,:,0),PC,P0,F1(:,:,:),  F2(:,:,:), E1(:,:,0),E2(:,:,0), &
                & HX,HY,GC1, GC2,COR,S,G,N,M,IP)  
-       PD_dp(:,:)=PD_HP(:,:)
-       call prepB_GCR_dp(PD_dp, PT_HP,U_dp(:,:,0), V_dp(:,:,0),dble(PD_HP(:,:)+PC_T(:,:)),P0_HP&
-           & ,F1_dp(:,:,:),  F2_dp(:,:,:), E1_dp(:,:,0),E2_dp(:,:,0), &
-               & HX_dp,HY_dp,GC1_dp, GC2_dp,dble(COR),S_dp,G_dp,N,M,IP) 
+!       PD_dp(:,:)=PD_HP(:,:)
+!       call prepB_GCR_dp(PD_dp, PT_HP,U_dp(:,:,0), V_dp(:,:,0),dble(PD_HP(:,:)+PC_T(:,:)),P0_HP&
+!           & ,F1_dp(:,:,:),  F2_dp(:,:,:), E1_dp(:,:,0),E2_dp(:,:,0), &
+!               & HX_dp,HY_dp,GC1_dp, GC2_dp,dble(COR),S_dp,G_dp,N,M,IP) 
 
 ! COMPUTE FIRST GUESS FROM ADVECTION
 
 !F1(:,:,1)=F1_dp(:,:,1)
-F1(:,:,1)=PT_HP(:,:)-F1_dp(:,:,1)
-F1_dp(:,:,1)=PT_HP(:,:)-F1_dp(:,:,1)
-  CALL  GCR_PRE(PT,F1(:,:,0),F2(:,:,0),HX,HY,S,S_full,F1(:,:,1),F2(:,:,1), &
-       &      PD(:,:),E1(:,:,0),E2(:,:,0),COR,IP, &
-       &      U(:,:,0),U(:,:,1),V(:,:,0),V(:,:,1),N,M,GC1,GC2,   &
-           &    MGH1IHX, MGH2IHY, AC, BC, AD, BD,  &
-  &      niter,nitsm,icount,error, real(PD_T_dp), sum_time, sum_lp_time, ID_PREC,.FALSE., save_time,&
-       &      TIME, codesignQ, IRHW, X, Y, Exit_Cond,               &
-       &  EXP_NAME, iprint, num_of_bits, DP_Depth, Alp_REL)
-  write(*,*)  'GCR_PRE_dp'
-  CALL  GCR_PRE_dp(PT_HP,F1_dp(:,:,0),F2_dp(:,:,0),HX_dp,HY_dp,S_dp,&
-        & dble(S_full),F1_dp(:,:,1),F2_dp(:,:,1), &
-       &      PD_dp(:,:),E1_dp(:,:,0),E2_dp(:,:,0),dble(COR),IP, &
-       &      U_dp(:,:,0),U_dp(:,:,1),V_dp(:,:,0),V_dp(:,:,1),N,M,GC1_dp,GC2_dp,   &
-           &   dble( MGH1IHX), dble(MGH2IHY),dble( AC), dble(BC),dble( AD),dble( BD),  &
-  &      niter,nitsm,icount,dble(error), PD_T_dp, dble(sum_time),dble( sum_lp_time), ID_PREC,.FALSE., save_time,&
-       &      dble(TIME), codesignQ, IRHW, X_dp, Y_dp, dble(Exit_Cond),               &
-       &  EXP_NAME, iprint, num_of_bits, DP_Depth, Alp_REL_dp)
-  write(*,*)  'GCR_PRE_dp_PT'
+!F1(:,:,1)=PT_HP(:,:)-F1_dp(:,:,1)
+!F1_dp(:,:,1)=PT_HP(:,:)-F1_dp(:,:,1)
+!  CALL  GCR_PRE(PT,F1(:,:,0),F2(:,:,0),HX,HY,S,S_full,F1(:,:,1),F2(:,:,1), &
+!       &      PD(:,:),E1(:,:,0),E2(:,:,0),COR,IP, &
+!       &      U(:,:,0),U(:,:,1),V(:,:,0),V(:,:,1),N,M,GC1,GC2,   &
+!           &    MGH1IHX, MGH2IHY, AC, BC, AD, BD,  &
+!  &      niter,nitsm,icount,error, real(PD_T_dp), sum_time, sum_lp_time, ID_PREC,.FALSE., save_time,&
+!       &      TIME, codesignQ, IRHW, X, Y, Exit_Cond,               &
+!       &  EXP_NAME, iprint, num_of_bits, DP_Depth, Alp_REL)
+!  write(*,*)  'GCR_PRE_dp'
+!  CALL  GCR_PRE_dp(PT_HP,F1_dp(:,:,0),F2_dp(:,:,0),HX_dp,HY_dp,S_dp,&
+!        & dble(S_full),F1_dp(:,:,1),F2_dp(:,:,1), &
+!       &      PD_dp(:,:),E1_dp(:,:,0),E2_dp(:,:,0),dble(COR),IP, &
+!       &      U_dp(:,:,0),U_dp(:,:,1),V_dp(:,:,0),V_dp(:,:,1),N,M,GC1_dp,GC2_dp,   &
+!           &   dble( MGH1IHX), dble(MGH2IHY),dble( AC), dble(BC),dble( AD),dble( BD),  &
+!  &      niter,nitsm,icount,dble(error), PD_T_dp, dble(sum_time),dble( sum_lp_time), ID_PREC,.FALSE., save_time,&
+!       &      dble(TIME), codesignQ, IRHW, X_dp, Y_dp, dble(Exit_Cond),               &
+!       &  EXP_NAME, iprint, num_of_bits, DP_Depth, Alp_REL_dp)
+!  write(*,*)  'GCR_PRE_dp_PT'
   CALL  GCR_PRE_imp(PT_HP,F1(:,:,0),F2(:,:,0),HX,HY,S,&
         & S_full,F1(:,:,1),F2(:,:,1), &
        &      PD(:,:),E1(:,:,0),E2(:,:,0),COR,IP, &
@@ -910,8 +891,8 @@ F1_dp(:,:,1)=PT_HP(:,:)-F1_dp(:,:,1)
        
        
   If(QRelax) then     
-    CALL PRFORC_ABS(PT,F1(:,:,0),F2(:,:,0),PD,F2(:,:,1), &
-       &      E1(:,:,0),E2(:,:,0),HX,HY,COR,N,M,IP,GC1,GC2,Alp_REL,1,1)
+!    CALL PRFORC_ABS(PT,F1(:,:,0),F2(:,:,0),PD,F2(:,:,1), &
+!       &      E1(:,:,0),E2(:,:,0),HX,HY,COR,N,M,IP,GC1,GC2,Alp_REL,1,1)
 
     CALL PRFORC_ABS_dp(PT_HP,F1_dp(:,:,0),F2_dp(:,:,0),dble(PD),dble(F2(:,:,1)), &
        &     dble( E1(:,:,0)),dble(E2(:,:,0)),dble(HX),dble(HY),dble(COR),N,M,IP,&
@@ -946,8 +927,8 @@ F1_dp(:,:,1)=PT_HP(:,:)-F1_dp(:,:,1)
      
      
 ! COMPUTE SOLUTION'S UPDATE
- call add_NewForcesB(QX, QY, F1(:,:,0), F2(:,:,0) &
-   &,GC1, GC2,GI, N, M)
+! call add_NewForcesB(QX, QY, F1(:,:,0), F2(:,:,0) &
+!   &,GC1, GC2,GI, N, M)
 
  call add_NewForcesB_dp(QX_HP, QY_HP, dble(F1(:,:,0)), dble(F2(:,:,0)) &
    &,GC1_dp, GC2_dp,GI_dp, N, M)
@@ -962,18 +943,18 @@ F1_dp(:,:,1)=PT_HP(:,:)-F1_dp(:,:,1)
     endif
 
 !! sanity check for elliptic problem
-CALL DIVER_dp(div_old(:,:),QX_old*dble(GC1),QY_old*dble(GC2),dble(HX),dble(HY),dble(S),N,M,IP,1)
-CALL DIVER_dp(div_new(:,:),QX_HP *dble(GC1)   ,QY_HP *dble(GC2)         ,dble(HX),dble(HY),dble(S),N,M,IP,1)
+!CALL DIVER_dp(div_old(:,:),QX_old*dble(GC1),QY_old*dble(GC2),dble(HX),dble(HY),dble(S),N,M,IP,1)
+!CALL DIVER_dp(div_new(:,:),QX_HP *dble(GC1)   ,QY_HP *dble(GC2)         ,dble(HX),dble(HY),dble(S),N,M,IP,1)
 
 
-r_eval(:,:)=(0.5d0*(div_new(:,:)+div_old(:,:))*dble(G)-PD_old(:,:)+PT(:,:))
+!r_eval(:,:)=(0.5d0*(div_new(:,:)+div_old(:,:))*dble(G)-PD_old(:,:)+PT(:,:))
 
-err_fin=0.0d0
- DO J=1,M
-   DO I=2,N-1
-      err_fin=err_fin+r_eval(I,J)*r_eval(I,J)
-   enddo
- enddo
+!err_fin=0.0d0
+! DO J=1,M
+!   DO I=2,N-1
+!      err_fin=err_fin+r_eval(I,J)*r_eval(I,J)
+!   enddo
+! enddo
 !if (.not. (KT/NPRINT*NPRINT.NE.KT)) then
 !write(*,*) div_old(1,1),div_new(1,1), PD_old(1,1), PT(1,1)
 !write(*,*) 0.5d0*(div_old(1,1)+div_new(1,1))*dble(G), -PD_old(1,1)+ PT(1,1)
@@ -989,9 +970,9 @@ err_fin=0.0d0
 !CALL FILTRQ(QX,N,M)
 !CALL FILTRQ(QY,N,M)
 
-PD_old(:,:)=PT_HP(:,:)
-QX_old(:,:)=QX_HP(:,:)
-QY_old(:,:)=QY_HP(:,:)
+!PD_old(:,:)=PT_HP(:,:)
+!QX_old(:,:)=QX_HP(:,:)
+!QY_old(:,:)=QY_HP(:,:)
 
 !end sanity check for elliptic problem
 ! COMPUTE NEW FORCES
@@ -1001,10 +982,10 @@ QY_old(:,:)=QY_HP(:,:)
 ! COMPUTE NEW FORCES
 
 
-    call compute_new_Forces(PT,PD,QX,QY,QXS,QYS,   &
-            & F1(:,:,0),F2(:,:,0),E1(:,:,0),E2(:,:,0), &
-            & HX,HY,GH1,GH2,DHX2Y,COR, ALP_REL,EP, &
-           & IP,IPS, KT,N, M)
+!    call compute_new_Forces(PT,PD,QX,QY,QXS,QYS,   &
+!            & F1(:,:,0),F2(:,:,0),E1(:,:,0),E2(:,:,0), &
+!            & HX,HY,GH1,GH2,DHX2Y,COR, ALP_REL,EP, &
+!           & IP,IPS, KT,N, M)
       call compute_new_Forces_dp(PT_HP,PD_HP,QX_HP,QY_HP,&                                
               & dble(QXS),dble(QYS),   &
               & F1_dp(:,:,0),F2_dp(:,:,0),E1_dp(:,:,0),E2_dp(:,:,0), &
@@ -1024,32 +1005,17 @@ QY_old(:,:)=QY_HP(:,:)
       end do
     end do
 
-    DO J=1,M
-      DO I=1,N
-        !write(*,*) F1(I,J,0), F2(I, J,0), F1_dp(I,J,0), F2_dp(I, J,0), E1(I,J,0), E2(I, J,0)
-        !read(*,*)
-        U_dp(I,J,0)=QX_HP(I,J)/PD_HP(I,J)
-        V_dp(I,J,0)=QY_HP(I,J)/PD_HP(I,J)
-      end do
-    end do
+ !   DO J=1,M
+ !     DO I=1,N
+ !       !write(*,*) F1(I,J,0), F2(I, J,0), F1_dp(I,J,0), F2_dp(I, J,0), E1(I,J,0), E2(I, J,0)
+ !       !read(*,*)
+ !       U_dp(I,J,0)=QX_HP(I,J)/PD_HP(I,J)
+ !       V_dp(I,J,0)=QY_HP(I,J)/PD_HP(I,J)
+ !     end do
+ !   end do
 
 !COMPUTE OUTPUTED FIELDS ****************************************
 
-    IF(.not. (KT/NPRINT*NPRINT.NE.KT)) then
-    
-    
-      IF(IWRITE.EQ.1) WRITE(9) PD,PT,QX,QY,U,V,F1,F2,E1,E2
-      CALL DIAGNOS(QX(:,:)/PD(:,:),QY(:,:)/PD(:,:),PD,&
-                 & PT,HX,HY,IP,S,TIME,DX,DY,DT, SUM0,SUM1, &
-                 & KT,N,M,1, NITER,NITSM,ICOUNT,ERROR, sum_time, sum_lp_time)
-      ! plot not yet finished
-      call write_perf_markers (PD(:,:)+P0(:,:),QX(:,:)/PD(:,:),QY(:,:)/PD(:,:)&
-                  &, TIME, codesignQ, codesignD, IRHW, X, Y, N, M, &
-                  & num_of_bits,NITER,NITSM,ICOUNT, sum_time, sum_lp_time)
-      call write_fields(PD(:,:)+P0(:,:),QX(:,:)/PD(:,:),QY(:,:)/PD(:,:)&
-                  &, TIME, codesignQ, codesignD, IRHW, X, Y, N, M, num_of_bits, ID_prec, EXP_NAME)
-      !CALL PLOT(PT, P0, U(:,:,0), V(:,:,0),HX,HY,N,M,IRHW)
-    end if
 
   end do
 !!CLOSE TIME INTEGRATION
@@ -1080,7 +1046,9 @@ call close_perf_markers
   end do
  end do
 enddo
+call cpu_time(finish)
 
+write(*,*) 'Total runtime', finish-start
 END program
 
    subroutine codesign_PD(PD_HP,PT_HP, GI, P0_HP, EP, N, M)
@@ -1329,7 +1297,7 @@ INTEGER :: I, J
 !endif
     DO J=1,M
       DO I=1,N
-        F1(I,J)=PD(I,J)+P0(I,J)-0.5d0*F1(I,J)
+        F1(I,J)=0.5d0*F1(I,J)
       end do
     end do
 
@@ -1376,7 +1344,7 @@ INTEGER :: I, J
     DO J=1,M
       DO I=1,N
 
-        F1(I,J,1)=(F1(I,J,1)-0.5d0*F2(I,J,1))*G   !! (h+h0)*g pressure minus incoming mass of 0.5 old and 0.5 new momentum
+        F1(I,J,1)=(F1(I,J,1)+0.5d0*F2(I,J,1))*G   !! (h+h0)*g pressure minus incoming mass of 0.5 old and 0.5 new momentum
         F2(I,J,1)=PT(I,J)                          !! old one without new contributions
         PC(I,J)=(PC(I,J)+P0(I,J))*G
         PD(I,J)=P0(I,J)*G
@@ -5129,91 +5097,13 @@ exiting=.false.
 
 epa=1.e-30
 
-p_dp(:,:)=p(:,:)
-pfx_dp(:,:)= pfx(:,:)
-pfy_dp(:,:)= pfy(:,:)
-p_T_dp(:,:)=0.0d0
-
- DO J=1,n2
-   DO I=1,n1
-    PMB(I, J)=b(I,J)
-    PMP0(I,J)= p(I,J)-p0(I,J)
-   enddo
- enddo
- DO J=1,n2
-   DO I=1,n1
-    PMB_dp(I, J)=b(I,J)
-    PMP0_dp(I,J)= p_dp(I,J)-p0(I,J)
-   enddo
- enddo
+call lap0_depth(a11,a12,a21,a22,b11,b22,                   &
+     &          pb,p0,e1,e2,hx,hy,cor,n1,n2,gc1,gc2, &
+           &    MGH1IHX, MGH2IHY, AC, BC, AD, BD,  &
+           & DP_Depth)
 
 
-p_true(:,:)=p(:,:)
-p0_true(:,:)=p0(:,:)
-b_true(:,:)=b(:,:)
-
-p_true_dp(:,:)=p_dp(:,:)
-p0_true_dp(:,:)=p0(:,:)
-b_true_dp(:,:)=b(:,:)
-
-
-
-!call cpu_time(startLP)
-DO J=1,n2
-  DO I=1,n1
-    r(I,J)=rpe_0
-    ar(I,J)=rpe_0
-    qr(I,J)=rpe_0
-  enddo
-enddo
-DO J=1,n2
-  DO I=1,n1
-    r_dp(I,J)=0.0d0
-    ar_dp(I,J)=0.0d0
-    qr_dp(I,J)=0.0d0
-  enddo
-enddo
-
-do l=1,lord
-  DO J=1,n2
-    DO I=1,n1
-      x(I,J,l)=rpe_0
-      ax(I,J,l)=rpe_0
-    enddo
-  enddo
-enddo
-do l=1,lord
-  DO J=1,n2
-    DO I=1,n1
-      x_dp(I,J,l)=0.0d0
-      ax_dp(I,J,l)=0.0d0
-    enddo
-  enddo
-enddo
-
-!call cpu_time(endLP)
-lowprectime=lowprectime + endLP-startLP
-
-
-
-  !! should be 23
-
-!! matrix entries
-call LAP0_Piotr(a11,a12,a21,a22,b11,b22,                   &
-     &          pb,p0,e1,e2,hx,hy,cor,ALP_rel,n1,n2,gc1,gc2)
-call LAP0_Piotr_dp(a11_dp,a12_dp,a21_dp,a22_dp,b11_dp,b22_dp,                   &
-     &          dble(pb),dble(p0),dble(e1),dble(e2),dble(hx),                   &
-     &          dble(hy),dble(cor),dble(ALP_rel),n1,n2,dble(gc1),dble(gc2))
-!call lap0_depth(a11,a12,a21,a22,b11,b22,                   &
-!     &          pb,p0,e1,e2,hx,hy,cor,n1,n2,gc1,gc2, &
-!           &    MGH1IHX, MGH2IHY, AC, BC, AD, BD,  &
-!           & DP_Depth)
-
-  !! should be 23
-     ! Preconditioning: init
-!call precon_prep_depth(T_step, A_c, B_c, C_c,a11,a12,a21,a22,b11,b22,&
-!              & p0,pfx,pfy,s,n1,n2,ip,ID_PREC)
-if (ID_PREC==5) then
+   if (ID_PREC==5) then
     call precon_prep_depth(T_step, A_c, ps, divi,a11,a12,a21,a22,b11,b22,&
               & p0,pfx,pfy,s,n1,n2,ip,ID_PREC,23, DP_Depth)
 elseif (ID_PREC==6) then
@@ -5221,53 +5111,20 @@ elseif (ID_PREC==6) then
 elseif (ID_PREC==7) then
     call precon_prep_depth(T_step, A_c, ps, divi,a11,a12,a21,a22,b11,b22,&
               & p0,pfx,pfy,s,n1,n2,ip,ID_PREC,23, DP_Depth)
-    call precon_prep_depth_dp(T_step_dp, A_c_dp, ps_dp, divi_dp,&
-              & a11_dp,a12_dp,a21_dp,a22_dp,b11_dp,b22_dp,&
-              & dble(p0),pfx_dp,pfy_dp,dble(s),n1,n2,ip,ID_PREC,23, DP_Depth)
 endif
 
-  !! should be 23
-!call laplfirst(p(:,:),r_HP(:,:),a11,a12,a21,a22,b11,b22, p0,   &
-!     &                           pfx,pfy,s,n1,n2,ip)
-! replace my laplfirst_depth
-!call laplfirst_depth(p(:,:),r_HP(:,:), a11,a12,a21,a22,b11,b22,PMP0,&
-!     &                     pfx,pfy,S,n1,n2,IP, 23,DP_Depth)
-!with Piotr's
-!  CALL PRFORC_ABS(p(:,:),pfx,pfy,pb,p0, &
-!       &      E1(:,:),E2(:,:),HX,HY,COR,n1,n2,IP,GC1,GC2,Alp_REL,1,1)
-!  call diver(r_HP,pfx,pfy,hx,hy,s,n1,n2,ip,-1)
-!if(comp_with_dp) then
-  CALL PRFORC_ABS_dp(p_dp(:,:),pfx_dp,pfy_dp,dble(pb),dble(p0), &
+  CALL PRFORC_ABS_dp(p(:,:),pfx_dp,pfy_dp,dble(pb),dble(p0), &
        &      dble(E1(:,:)),dble(E2(:,:)),dble(HX),dble(HY),dble(COR), &
        &      n1,n2,IP,dble(GC1),dble(GC2),dble(Alp_REL),1,1)
   call diver_dp(r_HP_dp,pfx_dp,pfy_dp,dble(hx),dble(hy),dble(s),n1,n2,ip,-1)
-r_HP(:,:)=r_HP_dp(:,:)
-!        write(*,*) 'r0 first part', norm(r_HP(:,:),r_HP_dp(:,:),n1,n2,1,n1,1,n2,2), &
-!                  & norm(r_HP(:,:),r_HP_dp(:,:),n1,n2,1,n1,1,n2,1) 
-!  endif
-!! calculate initial residual
-call cpu_time(startLP)
- !! should be 23
 
-err0=rpe_0
  DO J=1,n2
    DO I=1,n1
-     r_HP(I,J)=rpe_05*r_HP(I,J)-(b(I,J))
-   enddo
- enddo
-
-!if(comp_with_dp) then
- DO J=1,n2
-   DO I=1,n1
-     r_HP_dp(I,J)=0.5d0*r_HP_dp(I,J)-(dble(b(I,J)))
+     r_HP_dp(I,J)=0.5d0*r_HP_dp(I,J)+(dble(b(I,J)))
    enddo
  enddo
 r_HP(:,:)=r_HP_dp(:,:)
-  r0_HP_dp(:,:)=r_HP_dp(:,:)
-!        write(*,*) 'r0 full', norm(r_HP(:,:),r_HP_dp(:,:),n1,n2,1,n1,1,n2,2), &
-!                  & norm(r_HP(:,:),r_HP_dp(:,:),n1,n2,1,n1,1,n2,1) 
 
-!  endif
 
  err0=0.0
  DO J=1,n2
@@ -5276,26 +5133,7 @@ r_HP(:,:)=r_HP_dp(:,:)
    enddo
  enddo
 
- err0_dp=0.0
- DO J=1,n2
-   DO I=2,n1-1
-      err0_dp=err0_dp+r_HP_dp(I,J)*r_HP_dp(I,J)
-   enddo
- enddo
- write(*,*) 'err0_dp', sqrt(err0_dp)
-! write(*,*) (maxval(abs(r_HP(:,J))), J=1,n2) 
-
-!if (iprint==1) then
-!    call write_L2r0(dble(sqrt(err0),&
-!     & dble(sqrt(global_sqsums(r_HP,r_HP,n1,n2,size_of_sum,2,N1-1,1,n2))), dble(TIME), &
-!            &  codesQ, codes, IRHW, num_of_bits, 9 ,EXP_NAME)
-!endif
-   write(*,*) 'normal err0' ,sqrt(err0)
     err0=sqrt(err0)
-! IF(global_sum_fix) then
-    err0=sqrt(global_sqsums(r_HP,r_HP,n1,n2,size_of_sum,2,N1-1,1,n2))
-   write(*,*) 'corrected err0', sqrt(global_sqsums(r_HP,r_HP,n1,n2,size_of_sum,2,N1-1,1,n2))
-!  endif
     errnm1=err0
 
 if (iprint==1) then
@@ -5303,36 +5141,20 @@ if (iprint==1) then
                      & n1, n2, num_of_bits, 9 ,EXP_NAME)
 endif
 
-
-
-call cpu_time(startLP)
-
 call precon(r_HP,x(:,:,1),ax(:,:,1), T_step,  A_c, ps, divi,a11,a12,a21,a22,b11,b22,p0,  &
                 &   pfx,pfy,s,S_full,n1,n2,ip,ID_PREC, num_of_bits, DP_Depth)
 
 
-qrr0=rpe_0
- DO J=1,n2
-   DO I=1,n1
-      qrr0=qrr0+x(I,J,1)*x(I,J,1)
-   enddo
- enddo
-qrr0=sqrt(qrr0)
 
-  IF(global_sum_fix) then
-qrr0=sqrt(global_sqsums(x(:,:,1),x(:,:,1),n1,n2,size_of_sum,2,N1-1,1,n2))
-endif
   call lapl_depth(x(:,:,1),ax(:,:,1), A11,A12,A21,A22,B11,B22,P0,pfx,pfy,S,n1,n2,IP,num_of_bits,DP_Depth)
      
       DO J=1,n2
         DO I=1,n1
-      ax(I,J,1)=rpe_05*ax(I,J,1)-x(I,J,1)
+      ax(I,J,1)=0.5*ax(I,J,1)-x(I,J,1)
         enddo
       enddo
 
 
-call cpu_time(endLP)
-lowprectime=lowprectime + endLP-startLP
 
 do it=1,itr
 
@@ -5343,42 +5165,37 @@ do it=1,itr
    exit
  endif
   do l=1,lord
-    !write(*,*) 'before ',niter
-
-    !write(*,*) niter
-
-     
-
-
- ! IF(global_sum_fix) then
-    rax      =global_sqsums(r_HP(:,:),ax(:,:,l),n1,n2,size_of_sum,2,N1-1,1,n2)
-    ax2(l)=global_sqsums(ax(:,:,l),ax(:,:,l),n1,n2,size_of_sum,2,N1-1,1,n2)
+ !   rax      =global_sqsums(r_HP(:,:),ax(:,:,l),n1,n2,size_of_sum,2,N1-1,1,n2)
+ !   ax2(l)=global_sqsums(ax(:,:,l),ax(:,:,l),n1,n2,size_of_sum,2,N1-1,1,n2)
  !
+
+    ax2(l)=rpe_0
+    rax=rpe_0
+    DO J=1,n2
+      DO I=1,n1
+        rax=rax+r_HP(I,J)*ax(I,J,l)
+        ax2(l)=ax2(l)+ax(I,J,l)*ax(I,J,l)
+      enddo
+    enddo
+
     ax2(l)=max(epa,ax2(l))
     beta=-rax/ax2(l)
-    write(*,*) 'beta fin', beta
- ! endif
-
-!23 !!was 23 before exit criterium   
-!if(comp_with_dp) then
-!        write(*,*) ' r before', norm(r_HP(:,:),r_HP_dp(:,:),n1,n2,2,n1-1,1,n2,2), &
-!                  & norm(r_HP(:,:),r_HP_dp(:,:),n1,n2,2,n1-1,1,n2,1)
-!endif
-      DO J=1,n2
+      
+    
+    DO J=1,n2
         DO I=1,n1
          p_T(I,J)=p_T(I,J) +beta* x(I,J,l) 
          ! p(I,J)=p(I,J) +beta* x(I,J,l)! done outside with p(:,:)+p_T(:,:) 
-         r_HP_dp(I,J)  =r_HP_dp(I,J)   +beta*ax(I,J,l) 
+         r_HP(I,J)  =r_HP(I,J)   +beta*ax(I,J,l) 
         enddo
       enddo
-r_HP(:,:)=r_HP_dp(:,:)
-!  IF(global_sum_fix) then
     errn      =global_sqsums(r_HP,r_HP,n1,n2,size_of_sum,2,N1-1,1,n2)
 !  endif
 
 
 
 !!! begin true residual
+if (iprint==1) then
 r_true_dp(:,:)=0.0d0
   CALL PRFORC_ABS_dp(dble(p_true_dp(:,:))+dble(p_T(:,:)),pfx_dp,pfy_dp,dble(pb),dble(p0), &
        &      dble(E1(:,:)),dble(E2(:,:)),dble(HX),dble(HY),dble(COR), &
@@ -5398,21 +5215,20 @@ enddo
         enddo
       enddo
 
-write(*,*) 'True Residual', sqrt(err_true_dp), sqrt(err_true_dp)/err0 
+!write(*,*) 'True Residual', sqrt(err_true_dp), sqrt(err_true_dp)/err0 
 !!! end true residual
 
-if (iprint==1) then
     call write_residual(real(r_true_dp),eps*Exit_cond, niter+1, TIME, &
             &  codesQ, codes, IRHW, DX_rpe, DY_rpe, n1, n2, num_of_bits, 9 ,EXP_NAME)
 endif
 
 
     errn=sqrt(errn)
-   write(*,*) 'Iteration', niter,'errn', errn,'err0', err0, errn/err0, 'div by err0_dp', errn/err0_dp, 'truth', errn_dp/err0_dp
+!   write(*,*) 'Iteration', niter,'errn', errn,'err0', err0, errn/err0, 'div by err0_dp', errn/err0_dp, 'truth', errn_dp/err0_dp
 !   read(*,*)
-    write(*,*) exiting, it>itmn, it, itmn
+   ! write(*,*) exiting, it>itmn, it, itmn
     if(errn.lt.eps*err0 .and. it > itmn) exiting=.true.
-    write(*,*) 'it, l', it, l, exiting
+   ! write(*,*) 'it, l', it, l, exiting
     if(exiting .eqv. .true.) exit
     if(errn.ge.errnm1) exiting=.true.
     errnm1=errn
@@ -5435,12 +5251,22 @@ call precon(r_HP,qu, aqu , T_step,  A_c, ps, divi,a11,a12,a21,a22,b11,b22,p0,   
 
 
 
-
-
     do ll=1,l
-    axaqu(ll)  =global_sqsums(ax(:,:,ll),aqu(:,:),n1,n2,size_of_sum,2,N1-1,1,n2)
-    del(ll)=-axaqu(ll)/ax2(ll)
+      axaqu(ll)=rpe_0
+      DO J=1,n2
+        DO I=1,n1
+          axaqu(ll)=axaqu(ll)+ax(I,J,ll)*aqu(I,J)
+        enddo
+      enddo
+      del(ll)=-axaqu(ll)/ax2(ll)
+
     enddo
+
+
+  !  do ll=1,l
+  !  axaqu(ll)  =global_sqsums(ax(:,:,ll),aqu(:,:),n1,n2,size_of_sum,2,N1-1,1,n2)
+  !  del(ll)=-axaqu(ll)/ax2(ll)
+  !  enddo
 
 
     if(l.lt.lord) then
@@ -5503,112 +5329,7 @@ end do
 !write(*,*) niter
 !  200
 !niter=it
-qrrn=rpe_0
- DO J=1,n2
-   DO I=2,n1-1
-      qrrn=qrrn+x(I,J,1)*x(I,J,1)
-   enddo
- enddo
-qrrn=sqrt(qrrn)
-  IF(global_sum_fix) then
-qrrn=sqrt(global_sqsums(x(:,:,1),x(:,:,1),n1,n2,size_of_sum,2,N1-1,1,n2))
-endif
-qrror=qrrn/qrr0
 
-!if (iprint==1) then
- write(*,*) 'Qerror', qrror 
-call LAP0_Piotr_dp(a11_dp,a12_dp,a21_dp,a22_dp,b11_dp,b22_dp,                   &
-     &          dble(pb),dble(p0),dble(e1),dble(e2),dble(hx),                   &
-     &          dble(hy),dble(cor),dble(ALP_rel),n1,n2,dble(gc1),dble(gc2))
-
-
-
-! end matrices
-r0_true_dp(:,:)=0.0d0
-!call laplfirst(p_true(:,:),r0_true(:,:),a11_dp,a12_dp,a21_dp,a22_dp,b11_dp,b22_dp, p0_true,   &
-!     &                           pfx,pfy,s,n1,n2,ip)
-  CALL PRFORC_ABS_dp(dble(p_true(:,:)),pfx_dp,pfy_dp,dble(pb),dble(p0), &
-       &      dble(E1(:,:)),dble(E2(:,:)),dble(HX),dble(HY),dble(COR), &
-       &      n1,n2,IP,dble(GC1),dble(GC2),dble(Alp_REL),1,1)
-  call diver_dp(r0_true_dp,pfx_dp,pfy_dp,dble(hx),dble(hy),dble(s),n1,n2,ip,-1)
-
-DO J=1,n2
-  DO I=1,n1
-    r0_true_dp(I,J)=0.5d0*r0_true_dp(I,J)-(dble(p_true(I,J))-dble(b_true(I,J)))
- ! write(*,*), i, J, P(i,J)
-  enddo
-enddo
-
-
-r_true_dp(:,:)=0.0d0
-  CALL PRFORC_ABS_dp(dble(p_true(:,:))+dble(p_T(:,:)),pfx_dp,pfy_dp,dble(pb),dble(p0), &
-       &      dble(E1(:,:)),dble(E2(:,:)),dble(HX),dble(HY),dble(COR), &
-       &      n1,n2,IP,dble(GC1),dble(GC2),dble(Alp_REL),1,1)
-  call diver_dp(r_true_dp,pfx_dp,pfy_dp,dble(hx),dble(hy),dble(s),n1,n2,ip,-1)
-
-DO J=1,n2
-  DO I=1,n1
-    r_true_dp(I,J)=0.5d0*r_true_dp(I,J)-(dble(p_true(I,J))+dble(p_T(I,J))-dble(b_true(I,J)))
- ! write(*,*), i, J, P(i,J)
-  enddo
-enddo
-
-r_spUp_dp(:,:)=0.0d0
-  CALL PRFORC_ABS_dp(dble(p_true(:,:)+p_T(:,:)),pfx_dp,pfy_dp,dble(pb),dble(p0), &
-       &      dble(E1(:,:)),dble(E2(:,:)),dble(HX),dble(HY),dble(COR), &
-       &      n1,n2,IP,dble(GC1),dble(GC2),dble(Alp_REL),1,1)
-  call diver_dp(r_spUp_dp,pfx_dp,pfy_dp,dble(hx),dble(hy),dble(s),n1,n2,ip,-1)
-
-DO J=1,n2
-  DO I=1,n1
-    r_spUp_dp(I,J)=0.5d0*r_spUp_dp(I,J)-(dble(p_true(I,J)+p_T(I,J))-dble(b_true(I,J)))
- ! write(*,*), i, J, P(i,J)
-  enddo
-enddo
-
-!r_true(:,:)=0.0d0
-!call laplfirst(p_true(:,:)+p_T(:,:),r_true(:,:),a11,a12,a21,a22,b11,b22, p0_true,   &
-!     &                           pfx,pfy,s,n1,n2,ip)
-
-!DO J=1,n2
-!  DO I=1,n1
-!    r_true(I,J)=0.5d0*r_true(I,J)-(p_true(I,J)+p_T(I,J)-b_true(I,J))
-!   write(*,*) i, J, p_true(i,J), p_T(i,j), &
-!& (p_true(i,J)+ p_T(i,j)), (dble(p_true(i,J))+ dble(p_T(i,j))), &
-!& abs(dble((p_true(i,J)+ p_T(i,j)))-dble((dble(p_true(i,J))+ dble(p_T(i,j)))))/&
-!& abs(dble(p_T(i,j)))
-!   read(*,*)
-!  enddo
-!enddo
-err_true_dp=0.0d0
-err0_true_dp=0.0d0
-err_spUp_dp=0.0d0
-
-DO J=1,n2
-  DO I=2,n1-1
-    err0_true_dp=err0_true_dp+r0_true_dp(I,J)*r0_true_dp(I,J)
-    err_true_dp=err_true_dp+r_true_dp(I,J)*r_true_dp(I,J)
-    err_spUp_dp=err_spUp_dp+r_spUp_dp(I,J)*r_spUp_dp(I,J)
-  enddo
-enddo
-write(*,*) niter
-!write(*,*) 'max(abs(rn/r0))', maxval(abs(r_true_dp(:,J))),maxval(abs(r0_true_dp(:,J))) !, &
-
-!write(*,*) 'max(abs(rn))',( maxval(abs(r_true_dp(:,J))), j=1,n2 )
-!write(*,*) 'L2(rn/r0))', sqrt(err_true_dp)/sqrt(err0_true_dp), sqrt(err_true_dp),sqrt(err0_true_dp) !, &
-
-!    & maxval(abs(r_spUp_dp(:,J)))/maxval(abs(r0_true_dp(:,J))), J=1,n2) 
-! write(*,*) 'truth DP ACC',sqrt(err_true_dp/err0_true_dp),'max(rtrue)' ,&
-!           & maxval(ABS(r_true_dp(:,:))),'max(r0true)', maxval(ABS(r0_true_dp(:,:))), 'max(r)',maxval(ABS(r_HP(:,:))),&
-!           &'max(r0)',err0 , 'EXIT', eps
-! write(*,*) 'truth SP ACC',sqrt(err_spUp_dp/err0_true_dp),'max(rspUp)' ,&
-!           & maxval(ABS(r_spUp_dp(:,:))),'max(r0true)', maxval(ABS(r0_true_dp(:,:))), 'max(r)',maxval(ABS(r_HP(:,:))),&
-!           &'max(r0)',err0 , 'EXIT', eps 
-
-!endif
-
-call cpu_time(finish)
-!write(*,*) niter
 
 icount=icount+1
 !write(*,*) 'iterations', niter
@@ -5731,7 +5452,6 @@ b_true_dp(:,:)=b(:,:)
 
 
 
-!call cpu_time(startLP)
 DO J=1,n2
   DO I=1,n1
     r(I,J)=rpe_0
@@ -5764,7 +5484,6 @@ do l=1,lord
   enddo
 enddo
 
-!call cpu_time(endLP)
 lowprectime=lowprectime + endLP-startLP
 
 
@@ -5819,7 +5538,6 @@ endif
 !                  & norm(r_HP(:,:),r_HP_dp(:,:),n1,n2,1,n1,1,n2,1) 
 !  endif
 !! calculate initial residual
-call cpu_time(startLP)
  !! should be 23
 
 err0=rpe_0
@@ -5877,7 +5595,6 @@ if (iprint==1) then
 endif
 
 
-call cpu_time(startLP)
 
 call precon(r_HP,x(:,:,1),ax(:,:,1), T_step,  A_c, ps, divi,a11,a12,a21,a22,b11,b22,p0,  &
                 &   pfx,pfy,s,S_full,n1,n2,ip,ID_PREC, num_of_bits, DP_Depth)
@@ -5926,7 +5643,6 @@ endif
 !endif
    !! end of rewrite
 
-call cpu_time(endLP)
 lowprectime=lowprectime + endLP-startLP
 
 do it=1,itr
@@ -6378,7 +6094,6 @@ write(*,*) niter
 
 !endif
 
-call cpu_time(finish)
 !write(*,*) niter
 
 icount=icount+1
@@ -6406,12 +6121,6 @@ call rpenum_init(0)
 
 
 ! truncating
-DO J=1+DP_Depth,M-DP_Depth
- DO I=1,N
-
-  S_L(I, J)=S(I, J)
-end do
-end do
 
 
 
@@ -7336,7 +7045,7 @@ end do
   END DO
 
 Delta_t_I=rpe_1/(rpe_025/T_step)
-write(*,*) Delta_t_I, T_step
+!write(*,*) Delta_t_I, T_step
 
 
       DO J=1,M
@@ -9142,7 +8851,6 @@ b_true_dp(:,:)=b(:,:)
 
 
 
-!call cpu_time(startLP)
 DO J=1,n2
   DO I=1,n1
     r(I,J)=rpe_0
@@ -9175,7 +8883,6 @@ do l=1,lord
   enddo
 enddo
 
-!call cpu_time(endLP)
 lowprectime=lowprectime + endLP-startLP
 
 
@@ -9230,7 +8937,6 @@ endif
 
 
 
-call cpu_time(startLP)
 
 call precon_dp(r_HP,x(:,:,1),ax(:,:,1), T_step,  A_c, ps, divi,a11,a12,a21,a22,b11,b22,p0,  &
                 &   pfx,pfy,s,S_full,n1,n2,ip,ID_PREC, num_of_bits, DP_Depth)
@@ -9528,7 +9234,6 @@ write(*,*) 'L2(rn/r0))', sqrt(err_true_dp)/sqrt(err0_true_dp), sqrt(err_true_dp)
 
 !endif
 
-call cpu_time(finish)
 !write(*,*) niter
 
 icount=icount+1

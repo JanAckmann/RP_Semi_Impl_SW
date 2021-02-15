@@ -1,12 +1,12 @@
 PROGRAM IS1SPSL
-use implicit_functions_DP
+use implicit_functions_SP
 
 implicit none
 
 INTEGER, PARAMETER :: NLON=(512)+2,NLAT=256
 INTEGER, PARAMETER :: N=NLON,M=NLAT,NM=N*M
  character(len=150) :: EXP_NAME, Dp_depth_str
-DOUBLE PRECISION ::  U(N,M,0:1),&
+REAL(Kind=4) ::  U(N,M,0:1),&
                & V(N,M,0:1),  &
                & PD(N,M),     &
                & QX(N,M),     &
@@ -34,13 +34,13 @@ DOUBLE PRECISION ::  U(N,M,0:1),&
                & QXS(N,M),    &
                & QYS(N,M)
 
-DOUBLE PRECISION :: MGH1IHX(M),  &
+REAL(Kind=4) :: MGH1IHX(M),  &
                & MGH2IHY(M),  &
                & AC(M),       &
                & BC(M),       &
                & AD(M),       &
                & BD(M), A, B, C, D
-DOUBLE PRECISION ::U_23(N,M),&
+REAL(Kind=4) ::U_23(N,M),&
                  & V_23(N,M),     &
                  & HX_23(N,M),     &
                  & HY_23(N,M),     &
@@ -50,29 +50,29 @@ DOUBLE PRECISION ::U_23(N,M),&
                  & Y_23(M+1),        &
                  & COR_23(N,M)
 
-DOUBLE PRECISION ::TIME,&
+REAL(Kind=4) ::TIME,&
                & DX, &
                & DY, &
                & DT, &
                & mue
 
-DOUBLE PRECISION :: DX_23, &
+REAL(Kind=4) :: DX_23, &
                & DY_23, &
                & DT_23
 
 INTEGER :: IP(N)
-DOUBLE PRECISION :: sum_time, sum_lp_time
+REAL(Kind=4) :: sum_time, sum_lp_time
 
 !!! store old values in low prec. to calc final tend.
 
-DOUBLE PRECISION ::    PD_T(N,M), &
+REAL(Kind=4) ::    PD_T(N,M), &
                   & QX_T(N,M), &
                   & QY_T(N,M)
 
 
                   
 !!! the HIGH-PRECISION VARIABLES
-DOUBLE PRECISION :: PD_HP(N,M), &
+REAL(Kind=4) :: PD_HP(N,M), &
                   & QX_HP(N,M), &
                   & QY_HP(N,M), &
                   & UA_HP(N,M), &
@@ -89,34 +89,34 @@ DOUBLE PRECISION :: PD_HP(N,M), &
                   
 ! CORIOLIS, GRAVITY AND EARTH RADIUS SPECIFICATION
 INTEGER, PARAMETER  :: ICORIO=1
-DOUBLE PRECISION :: F0
-DOUBLE PRECISION :: G 
-DOUBLE PRECISION :: R
+REAL(Kind=4) :: F0
+REAL(Kind=4) :: G 
+REAL(Kind=4) :: R
 
 ! CHARACTERISTICS OF THE FLOW
-DOUBLE PRECISION :: USCAL 
-DOUBLE PRECISION :: H00   
-DOUBLE PRECISION :: HMTS  
+REAL(Kind=4) :: USCAL 
+REAL(Kind=4) :: H00   
+REAL(Kind=4) :: HMTS  
 
 ! Polar Filters
 logical ::  QRelax
-DOUBLE PRECISION :: U0(N,M),     &
+REAL(Kind=4) :: U0(N,M),     &
                   & V0(N,M),     &
                   & PT0(N,M),     &
                   & PD0(N,M)
-DOUBLE PRECISION :: Alp_REL(N,M), &
+REAL(Kind=4) :: Alp_REL(N,M), &
                   & atau
 
 
 
-DOUBLE PRECISION ::  F0_23
-DOUBLE PRECISION :: G_23
-DOUBLE PRECISION ::  R_23
+REAL(Kind=4) ::  F0_23
+REAL(Kind=4) :: G_23
+REAL(Kind=4) ::  R_23
 
 ! CHARACTERISTICS OF THE FLOW
-DOUBLE PRECISION :: USCAL_23 
-DOUBLE PRECISION ::  H00_23   
-DOUBLE PRECISION ::  HMTS_23, GMM_23, AMM, DETI
+REAL(Kind=4) :: USCAL_23 
+REAL(Kind=4) ::  H00_23   
+REAL(Kind=4) ::  HMTS_23, GMM_23, AMM, DETI
 
 Integer :: IPRINT
 
@@ -135,16 +135,16 @@ INTEGER, PARAMETER  :: IPS=0
 ! CREATE TAPEWR
 INTEGER, PARAMETER :: IANAL=0,IRST=0,IWRITE=0
 INTEGER, PARAMETER :: NFIL=50
-DOUBLE PRECISION :: DTFIL(NFIL),&
+REAL(Kind=4) :: DTFIL(NFIL),&
      & NTFIL(NFIL)
 
 INTEGER:: NITER,  &
         & NITSM,  &
         & ICOUNT
-DOUBLE PRECISION :: ERROR
+REAL(Kind=4) :: ERROR
 
 
-DOUBLE PRECISION ::PI, &
+REAL(Kind=4) ::PI, &
      & PI2, &
      & PIH, &
      & PVEL, &
@@ -152,7 +152,7 @@ DOUBLE PRECISION ::PI, &
      & GI, &
      & EP
      
-DOUBLE PRECISION :: PI_23, &
+REAL(Kind=4) :: PI_23, &
      & PI2_23, &
      & PIH_23, &
      & PVEL_23, &
@@ -168,33 +168,34 @@ INTEGER :: IORD, &
 INTEGER :: KMX, mpfl, liner
 
 ! grid creation
-DOUBLE PRECISION :: GC1, &
+REAL(Kind=4) :: GC1, &
      & GC2, &
      & GH1, &
      & GH2
 
-DOUBLE PRECISION :: GC1_23, &
+REAL(Kind=4) :: GC1_23, &
      & GC2_23, &
      & GH1_23, &
      & GH2_23
      
-DOUBLE PRECISION :: D0, &
+REAL(Kind=4) :: D0, &
      & S_full         , &
      & Exit_Cond, adv_cour 
 
 
-DOUBLE PRECISION :: D_Adv(N,M)
+REAL(Kind=4) :: D_Adv(N,M)
  
 ! the rest
-DOUBLE PRECISION :: GMM, SUM1, SUM0, start, finish
+REAL(Kind=4) :: GMM, SUM1, SUM0, start, finish
 INTEGER :: I, J, KF, KT, NPLOT, NPRINT, NT, num_of_bits, ID_PREC
 INTEGER :: stencil, ueber
 
 logical :: codesignQ, codesignD, mountain, gcr23, save_time
 mountain = .false.
  !!! RPE VARIABLES
-call cpu_time(start)
 
+
+call cpu_time(start)
 
   codesignQ = .FALSE.
   codesignD = .FALSE.
@@ -209,13 +210,13 @@ stencil=0
 
 
 do ID_PREC=7,7,-5
- do IRHW = 1,3,2
+ do IRHW = 3,3,2
 
   do DP_Depth=0,0,2
    write(Dp_depth_str,*) DP_Depth
 
   !ID_PREC=0
-   EXP_NAME= 'data/sheusp_DP_L2Exit_1M3_dt200_res4'
+   EXP_NAME= 'data/sheusp_SP_1iteration_L2Exit_1M3_dt200_res4'
   ! EXP_NAME= 'data_ADI_Precon_init23'
 
 
@@ -272,8 +273,9 @@ DT_23=100.0d0
 KMX=4
 mpfl=999999
 elseif(IRHW==1) then
-NT = 6480 !  6376 !int(6376*(200.0/240.0)) !12960  
-NPRINT =216 !797 !797 !int(797*(200.0/240.0)) !864 !DATA NT,NPRINT/12096,864/
+!DATA NT,NPRINT/12096,864/
+NT = 6480 ! 6376 !int(6376*(200.0/240.0)) !12960  
+NPRINT = 216 !797 !797 !int(797*(200.0/240.0)) !864
 !NT = 6376 !int(6376*(200.0/240.0)) !12960  
 !NPRINT =200 !797 !797 !int(797*(200.0/240.0)) !864
 DT_23=200.0d0
@@ -281,8 +283,8 @@ KMX=4
 atau=200.*DT_23 ! RHW4
 mpfl=999999
 elseif(IRHW==3) then
-NT =  6480 ! 6376 !int(6376*(200.0/240.0)) !12960  
-NPRINT =216  !797 !797 !int(797*(200.0/240.0)) !864 !DATA NT,NPRINT/12096,864/
+NT =  6480! 6376 !int(6376*(200.0/240.0)) !12960  
+NPRINT =216 !797 !797 !int(797*(200.0/240.0)) !864 !DATA NT,NPRINT/12096,864/
 !NT = 6376 !int(6376*(200.0/240.0)) !12960  
 !NPRINT = 200 !797 !797 !797 !int(797*(200.0/240.0)) !864
 DT_23=200.0d0
@@ -418,6 +420,7 @@ GH2 = GH2_23
 
 DO J=1,M+1
   Y_23(J)=-PIH+(float(J)-0.5)*DY
+
   Y(J) = Y_23(J)
 
 end do
@@ -444,6 +447,7 @@ DO J=1,M
 
 
     HX_23(I,J)=R_23*COS(Y_23(J))
+
     HX(I,J) = HX_23(I,J)
     HY_23(I,J)=R_23
     HY(I,J) = HY_23(I,J)
@@ -497,6 +501,7 @@ elseif (IRHW.EQ.3)then
 else
   P0_HP(:,:)=0.0
 endif
+
 IF(IRHW.EQ.0) CALL INITZON(U_23,V_23,PT_HP,COR_23,X_23,Y_23,N,M,F0_23,BETA_23,H00_23,R_23,PVEL_23)
 IF(IRHW.EQ.1) CALL INITRHW(U_23,V_23,PT_HP,COR_23,X_23,Y_23,N,M,F0_23,R_23)
 IF(IRHW.EQ.2) CALL INITZON(U_23,V_23,PT_HP,COR_23,X_23,Y_23,N,M,F0_23,BETA_23,H00_23,R_23,PVEL_23)
@@ -619,7 +624,7 @@ endif
 
 
 
-!!! make sure that everything until here is initialized and calculated in DOUBLE PRECISION
+!!! make sure that everything until here is initialized and calculated in REAL(Kind=4)
 !!! before actually being downcasted
    call init_perf_markers(PD_HP(:,:)+P0(:,:),QX_HP(:,:)/PD_HP(:,:),QY_HP(:,:)/PD_HP(:,:), rpe_0, &
                    & codesignQ, codesignD, IRHW, X, Y, N, M, num_of_bits, ID_prec, EXP_NAME)
@@ -764,7 +769,8 @@ IF(IANAL.EQ.0) THEN
 !endif
     DO J=1,M
       DO I=1,N
-        F1(I,J,1)=PD(I,J)+P0(I,J)-rpe_05*F1(I,J,1)
+    ! original    F1(I,J,1)=PD(I,J)+P0(I,J)-rpe_05*F1(I,J,1)
+        F1(I,J,1)=.5*F1(I,J,1)
       end do
     end do
 
@@ -868,7 +874,8 @@ IF(IANAL.EQ.0) THEN
     DO J=1,M
       DO I=1,N
 
-        F1(I,J,1)=(F1(I,J,1)-rpe_05*F2(I,J,1))*G   !! (h+h0)*g pressure minus incoming mass of 0.5 old and 0.5 new momentum
+  ! Original      F1(I,J,1)=(F1(I,J,1)-rpe_05*F2(I,J,1))*G   !! (h+h0)*g pressure minus incoming mass of 0.5 old and 0.5 new momentum
+        F1(I,J,1)=(F1(I,J,1)+.5*F2(I,J,1))*G   !! (h+h0)*g pressure minus incoming mass of 0.5 old and 0.5 new momentum
         F2(I,J,1)=PT(I,J)                          !! old one without new contributions
         PC(I,J)=(PC(I,J)+P0(I,J))*G
         PD(I,J)=P0(I,J)*G
@@ -885,7 +892,7 @@ IF(IANAL.EQ.0) THEN
   ! end gcrtest1
 
 ! COMPUTE FIRST GUESS FROM ADVECTION
-  !write(*,*) 'into GCR'
+
   CALL  GCR_PRE(PT,F1(:,:,0),F2(:,:,0),HX,HY,S,S_full,F1(:,:,1),F2(:,:,1), &
        &      PD(:,:),E1(:,:,0),E2(:,:,0),COR,IP, &
        &      U(:,:,0),U(:,:,1),V(:,:,0),V(:,:,1),N,M,GC1,GC2,   &
@@ -894,7 +901,7 @@ IF(IANAL.EQ.0) THEN
        &      TIME, codesignQ, IRHW, X, Y, Exit_Cond,               &
        &  EXP_NAME, iprint, num_of_bits, DP_Depth, Alp_REL)
 
-     !! go back to DOUBLE PRECISION outside of the solver
+     !! go back to REAL(Kind=4) outside of the solver
      !  read(*,*)
  If(save_time) exit  ! if iteration counter has reached 100 once, jump to next set of bits
   
@@ -1127,22 +1134,22 @@ call close_perf_markers
   end do
  end do
 enddo
+
 call cpu_time(finish)
 
 write(*,*) 'Total runtime', finish-start
-
 END program
 
 
 subroutine topogr(h0,x,y,n,m, mountain)
-use implicit_functions_DP
+use implicit_functions_SP
 
 implicit none
 
 INTEGER :: n, m
-DOUBLE PRECISION :: h0(n,m)
-DOUBLE PRECISION :: x(n),y(m)
-DOUBLE PRECISION :: hs0, Rad, x_c, y_c, dist, pi, sigma
+REAL(Kind=4) :: h0(n,m)
+REAL(Kind=4) :: x(n),y(m)
+REAL(Kind=4) :: hs0, Rad, x_c, y_c, dist, pi, sigma
 integer :: i, j
 logical :: mountain
 
@@ -1205,12 +1212,12 @@ end subroutine
 !!!!!!!!! INITIALIZATION !!!!!!!!!!!!!!!!!!!!!!!!!
 
 SUBROUTINE INITZON(U,V,PT,COR,X,Y,N,M,F0,BETA,H00,R,Q)
-use implicit_functions_DP
+use implicit_functions_SP
 
 implicit none
 
-DOUBLE PRECISION :: PT(N,M)
-DOUBLE PRECISION :: U(N,M),V(N,M),COR(N,M),X(N),Y(M), F0, beta, H00, R, Q
+REAL(Kind=4) :: PT(N,M)
+REAL(Kind=4) :: U(N,M),V(N,M),COR(N,M),X(N),Y(M), F0, beta, H00, R, Q
 INTEGER :: N, M
 
 
@@ -1236,17 +1243,17 @@ end do
 END SUBROUTINE
 
 SUBROUTINE INITRHW(U,V,PT,COR,X,Y,N,M,F0,A)
-use implicit_functions_DP
+use implicit_functions_SP
 
 implicit none
-DOUBLE PRECISION :: PT(N,M)
+REAL(Kind=4) :: PT(N,M)
 
-DOUBLE PRECISION ::U(N,M),V(N,M),F0, A,COR(N,M),X(N),Y(M)
+REAL(Kind=4) ::U(N,M),V(N,M),F0, A,COR(N,M),X(N),Y(M)
 INTEGER :: N, M
 
 
-DOUBLE PRECISION ::     ATH(M), BTH(M), CTH(M), TH
-DOUBLE PRECISION ::     OM,K,PH0
+REAL(Kind=4) ::     ATH(M), BTH(M), CTH(M), TH
+REAL(Kind=4) ::     OM,K,PH0
 INTEGER :: R, I, J
 
 OM=7.848E-6
@@ -1282,16 +1289,16 @@ END SUBROUTINE
 
 
 SUBROUTINE PRFC0(A,F1,F2,PD,HX,HY,IP,IPS,GH1,GH2,EP,N,M)
-use implicit_functions_DP
+use implicit_functions_SP
 
 implicit none
-DOUBLE PRECISION :: A(N,M),F1(N,M),F2(N,M),PD(N,M),HX(N,M),HY(N,M)
+REAL(Kind=4) :: A(N,M),F1(N,M),F2(N,M),PD(N,M),HX(N,M),HY(N,M)
 INTEGER :: IP(N)
-DOUBLE PRECISION :: GH1, GH2, EP
+REAL(Kind=4) :: GH1, GH2, EP
 INTEGER :: IPS, N, M
 
 
-DOUBLE PRECISION :: GP, GN
+REAL(Kind=4) :: GP, GN
 INTEGER :: I, J
 
     DO I=2,N-1
@@ -1345,19 +1352,19 @@ END SUBROUTINE
 
 SUBROUTINE PRFORC( P,F1,F2,PB,P0,E1,E2,HX,HY,COR,            &
      &            N,M,IP,GC1,GC2,NOR,IRS)
-use implicit_functions_DP
+use implicit_functions_SP
 
 implicit none
-DOUBLE PRECISION :: P(N,M),F1(N,M),F2(N,M),PB(N,M),P0(N,M),E1(N,M),E2(N,M), &
+REAL(Kind=4) :: P(N,M),F1(N,M),F2(N,M),PB(N,M),P0(N,M),E1(N,M),E2(N,M), &
      & HX(N,M),HY(N,M),COR(N,M)
-DOUBLE PRECISION :: GC1, GC2
+REAL(Kind=4) :: GC1, GC2
 INTEGER  :: IP(N)
 INTEGER  :: N, M, NOR, IRS
 
 
 INTEGER :: I, J, NM
 
-DOUBLE PRECISION :: GH1, GH2, UTILD, VTILD, GMM
+REAL(Kind=4) :: GH1, GH2, UTILD, VTILD, GMM
 
 GH1=rpe_05*GC1
 GH2=rpe_05*GC2
@@ -1408,20 +1415,20 @@ END SUBROUTINE
 
 SUBROUTINE PRFORC_FIN( P,F1,F2,PB,P0,E1,E2,HX,HY,COR,       &
      &            N,M,IP,GC1,GC2,Relax_M, DT_23, NOR,IRS)
-use implicit_functions_DP
+use implicit_functions_SP
 
 implicit none
-DOUBLE PRECISION :: P(N,M),F1(N,M),F2(N,M),PB(N,M),P0(N,M),E1(N,M),E2(N,M), &
+REAL(Kind=4) :: P(N,M),F1(N,M),F2(N,M),PB(N,M),P0(N,M),E1(N,M),E2(N,M), &
      & HX(N,M),HY(N,M),COR(N,M)
-DOUBLE PRECISION :: GC1, GC2
-DOUBLE PRECISION :: Relax_M(M), DT_23, Relaxation
+REAL(Kind=4) :: GC1, GC2
+REAL(Kind=4) :: Relax_M(M), DT_23, Relaxation
 INTEGER  :: IP(N)
 INTEGER  :: N, M, NOR, IRS
 
 
 INTEGER :: I, J, NM
 
-DOUBLE PRECISION :: GH1, GH2, UTILD, VTILD, GMM
+REAL(Kind=4) :: GH1, GH2, UTILD, VTILD, GMM
 
 GH1=rpe_05*GC1
 GH2=rpe_05*GC2
@@ -1473,11 +1480,11 @@ END SUBROUTINE
 
 SUBROUTINE DIVER(F, U,  V, HX,HY,S, N, M,IP,IFLG)
 !!         (r,pfx,pfy,hx,hy,s,n1,n2,ip,-1)
-use implicit_functions_DP
+use implicit_functions_SP
  
  implicit none
  
-DOUBLE PRECISION :: F(N,M),U(N,M),V(N,M),HX(N,M),HY(N,M),S(N,M)
+REAL(Kind=4) :: F(N,M),U(N,M),V(N,M),HX(N,M),HY(N,M),S(N,M)
 INTEGER :: IP(N)
 INTEGER :: N, M, IFLG
 
@@ -1518,19 +1525,19 @@ END SUBROUTINE
 
 SUBROUTINE PRFORC_depth( P,F1,F2,PB,P0,E1,E2,HX,HY,COR,            &
      &            N,M,IP,GC1,GC2,NOR,IRS, num_of_bits, DP_Depth)
-use implicit_functions_DP
+use implicit_functions_SP
 
 implicit none
-DOUBLE PRECISION :: P(N,M),F1(N,M),F2(N,M),PB(N,M),P0(N,M),E1(N,M),E2(N,M), &
+REAL(Kind=4) :: P(N,M),F1(N,M),F2(N,M),PB(N,M),P0(N,M),E1(N,M),E2(N,M), &
      & HX(N,M),HY(N,M),COR(N,M)
-DOUBLE PRECISION :: GC1, GC2
+REAL(Kind=4) :: GC1, GC2
 INTEGER  :: IP(N)
 INTEGER  :: N, M, NOR, IRS, DP_Depth, num_of_bits
 
 
 INTEGER :: I, J, NM
 
-DOUBLE PRECISION :: GH1, GH2, UTILD, VTILD, GMM
+REAL(Kind=4) :: GH1, GH2, UTILD, VTILD, GMM
 
 GH1=rpe_05*GC1
 GH2=rpe_05*GC2
@@ -1656,11 +1663,11 @@ END SUBROUTINE
 
 SUBROUTINE DIVER_depth(F, U,  V, HX,HY,S, N, M,IP,IFLG, num_of_bits, DP_Depth)
 !!         (r,pfx,pfy,hx,hy,s,n1,n2,ip,-1)
-use implicit_functions_DP
+use implicit_functions_SP
  
  implicit none
  
-DOUBLE PRECISION :: F(N,M),U(N,M),V(N,M),HX(N,M),HY(N,M),S(N,M)
+REAL(Kind=4) :: F(N,M),U(N,M),V(N,M),HX(N,M),HY(N,M),S(N,M)
 
 INTEGER :: IP(N)
 INTEGER :: N, M, IFLG, DP_Depth, num_of_bits
@@ -1771,17 +1778,17 @@ END SUBROUTINE
 
 SUBROUTINE LAP0_Piotr(A11,A12,A21,A22,B11,B22,    &
      &          PB,P0,E1,E2,HX,HY,COR,ALP_rel,N,M,GC1,GC2)
-use implicit_functions_DP
+use implicit_functions_SP
 
 implicit none
-DOUBLE PRECISION :: A11(N,M),A12(N,M),A21(N,M),A22(N,M),B11(N,M),B22(N,M),  &
+REAL(Kind=4) :: A11(N,M),A12(N,M),A21(N,M),A22(N,M),B11(N,M),B22(N,M),  &
      &      PB(N,M),P0(N,M),E1(N,M),E2(N,M),HX(N,M),HY(N,M),COR(N,M), &
      &      ALP_rel(N,M)
-DOUBLE PRECISION :: GC1, GC2, DETI, AMM, GMM
+REAL(Kind=4) :: GC1, GC2, DETI, AMM, GMM
 INTEGER :: N, M
 
 
-DOUBLE PRECISION :: GH1, GH2, C1, C2,  A, B, C, D
+REAL(Kind=4) :: GH1, GH2, C1, C2,  A, B, C, D
 INTEGER :: I, J
 
 
@@ -1811,16 +1818,16 @@ end subroutine
 
 SUBROUTINE LAP0(A11,A12,A21,A22,B11,B22,    &
      &          PB,P0,E1,E2,HX,HY,COR,N,M,GC1,GC2)
-use implicit_functions_DP
+use implicit_functions_SP
 
 implicit none
-DOUBLE PRECISION :: A11(N,M),A12(N,M),A21(N,M),A22(N,M),B11(N,M),B22(N,M),  &
+REAL(Kind=4) :: A11(N,M),A12(N,M),A21(N,M),A22(N,M),B11(N,M),B22(N,M),  &
      &      PB(N,M),P0(N,M),E1(N,M),E2(N,M),HX(N,M),HY(N,M),COR(N,M)
-DOUBLE PRECISION :: GC1, GC2
+REAL(Kind=4) :: GC1, GC2
 INTEGER :: N, M
 
 
-DOUBLE PRECISION :: GH1, GH2, C1, C2, GMM, A, B, C, D
+REAL(Kind=4) :: GH1, GH2, C1, C2, GMM, A, B, C, D
 INTEGER :: I, J
 
 
@@ -1852,19 +1859,19 @@ SUBROUTINE LAP0_depth(A11,A12,A21,A22,B11,B22,  &
            &    PB,P0,E1,E2,HX,HY,COR,N,M,GC1,GC2, &
            &    MGH1IHX, MGH2IHY, AC, BC, AD, BD,  &
            & DP_Depth)
-use implicit_functions_DP
+use implicit_functions_SP
 
 implicit none
-DOUBLE PRECISION :: A11(N,M),A12(N,M),A21(N,M),A22(N,M),B11(N,M),B22(N,M),  &
+REAL(Kind=4) :: A11(N,M),A12(N,M),A21(N,M),A22(N,M),B11(N,M),B22(N,M),  &
      &      PB(N,M),P0(N,M),E1(N,M),E2(N,M),HX(N,M),HY(N,M),COR(N,M)
 
-DOUBLE PRECISION :: MGH1IHX(M), MGH2IHY(M), AC(M), BC(M), AD(M), BD(M)
-DOUBLE PRECISION ::GC1, GC2
-DOUBLE PRECISION :: MGH1IHX_L(M), MGH2IHY_L(M)
+REAL(Kind=4) :: MGH1IHX(M), MGH2IHY(M), AC(M), BC(M), AD(M), BD(M)
+REAL(Kind=4) ::GC1, GC2
+REAL(Kind=4) :: MGH1IHX_L(M), MGH2IHY_L(M)
 INTEGER :: N, M, DP_Depth
 
 
-DOUBLE PRECISION :: GH1, GH2, C1, C2, GMM, A, B, C, D
+REAL(Kind=4) :: GH1, GH2, C1, C2, GMM, A, B, C, D
 INTEGER :: I, J
 
 
@@ -1908,15 +1915,15 @@ END SUBROUTINE
 
 
 SUBROUTINE LAPL_depth(P,F,A11,A12,A21,A22,B11,B22,P0,U,V,S,N,M,IP, num_of_bits, DP_Depth)
-use implicit_functions_DP
+use implicit_functions_SP
 
 implicit none
-DOUBLE PRECISION :: P(N,M),F(N,M),A11(N,M),A12(N,M),A21(N,M),A22(N,M),  &
+REAL(Kind=4) :: P(N,M),F(N,M),A11(N,M),A12(N,M),A21(N,M),A22(N,M),  &
     &      B11(N,M),B22(N,M),P0(N,M),U(N,M),V(N,M),S(N,M),S_L(N,M)
 INTEGER :: IP(N)
 INTEGER :: N, M, num_of_bits, DP_Depth
 
-DOUBLE PRECISION :: UTIL, VTIL
+REAL(Kind=4) :: UTIL, VTIL
 INTEGER :: I, J
 
 
@@ -2091,15 +2098,15 @@ END SUBROUTINE
 
 
 SUBROUTINE LAPLfirst_depth(P,F,A11,A12,A21,A22,B11,B22,P0,U,V,S,N,M,IP, num_of_bits, DP_Depth)
-use implicit_functions_DP
+use implicit_functions_SP
 
 implicit none
-DOUBLE PRECISION ::  P(N,M),F(N,M),A11(N,M),A12(N,M),A21(N,M),A22(N,M),  &
+REAL(Kind=4) ::  P(N,M),F(N,M),A11(N,M),A12(N,M),A21(N,M),A22(N,M),  &
     &      B11(N,M),B22(N,M),P0(N,M),U(N,M),V(N,M),S(N,M), S_L(N, M)
 INTEGER :: IP(N)
 INTEGER :: N, M, num_of_bits, DP_Depth
 
-DOUBLE PRECISION ::  UTIL, VTIL
+REAL(Kind=4) ::  UTIL, VTIL
 INTEGER :: I, J
 
 
@@ -2274,15 +2281,15 @@ END SUBROUTINE
 
 
 SUBROUTINE LAPLfirst(P,F,A11,A12,A21,A22,B11,B22,P0,U,V,S,N,M,IP)
-use implicit_functions_DP
+use implicit_functions_SP
 
 implicit none
-DOUBLE PRECISION :: P(N,M),F(N,M),A11(N,M),A12(N,M),A21(N,M),A22(N,M),  &
+REAL(Kind=4) :: P(N,M),F(N,M),A11(N,M),A12(N,M),A21(N,M),A22(N,M),  &
     &      B11(N,M),B22(N,M),P0(N,M),U(N,M),V(N,M),S(N,M)
 INTEGER :: IP(N)
 INTEGER :: N, M
 
-DOUBLE PRECISION :: UTIL, VTIL
+REAL(Kind=4) :: UTIL, VTIL
 INTEGER :: I, J
 
 
@@ -2339,18 +2346,18 @@ END SUBROUTINE
 
 
 SUBROUTINE VELPRD(U,V,F,G,PD,HX,HY,IP,N,M,A,B,EP,KMX)
-use implicit_functions_DP
+use implicit_functions_SP
 
 implicit none
 INTEGER :: N, M, KMX
-DOUBLE PRECISION ::  U(N,M,0:1),V(N,M,0:1),F(N,M,0:1),G(N,M,0:1),         &
+REAL(Kind=4) ::  U(N,M,0:1),V(N,M,0:1),F(N,M,0:1),G(N,M,0:1),         &
      &          PD(N,M),HX(N,M),HY(N,M)
 INTEGER :: IP(N)
-DOUBLE PRECISION :: EP, A, B
+REAL(Kind=4) :: EP, A, B
 
-DOUBLE PRECISION :: UU(N,M),VV(N,M)
-DOUBLE PRECISION ::  CF, C1, C2, C1H, C2H, ALFA, BETA, ALF1, BET1, ALFM, BETM
-DOUBLE PRECISION :: AMP, UF(N),VF(N),SCR(N)
+REAL(Kind=4) :: UU(N,M),VV(N,M)
+REAL(Kind=4) ::  CF, C1, C2, C1H, C2H, ALFA, BETA, ALF1, BET1, ALFM, BETM
+REAL(Kind=4) :: AMP, UF(N),VF(N),SCR(N)
 INTEGER :: IORT, I, J
 
  AMP=0.0d0
@@ -2491,7 +2498,7 @@ END SUBROUTINE
 SUBROUTINE FILTRX(X,Y,AMP,N,KMX)
 
 implicit none
-DOUBLE PRECISION ::  X(N),Y(N), AMP
+REAL(Kind=4) ::  X(N),Y(N), AMP
 INTEGER :: N, KMX, I, J,k, IM, IP
 
   DO K=1,KMX
@@ -2518,7 +2525,7 @@ SUBROUTINE FILTRQ(FLD,N,M)
 
 implicit none
 
-DOUBLE PRECISION ::  FLD(N,M)
+REAL(Kind=4) ::  FLD(N,M)
 integer :: N, M, I
 
 
@@ -2542,22 +2549,22 @@ END subroutine
 
 SUBROUTINE MPDATT(U1,U2,X,H,N,M,IORDs,ISOR,NONOS,IDIV,IBC, IP,liner, X_T, codes)
 
-use implicit_functions_DP
+use implicit_functions_SP
 implicit none
 
   INTEGER, PARAMETER  :: LW=1,MP=1-LW
 
   INTEGER :: N, M
 
-  DOUBLE PRECISION :: U1(N,M),U2(N,M+1),X(N,M),H(N,M), X_T(N,M)
+  REAL(Kind=4) :: U1(N,M),U2(N,M+1),X(N,M),H(N,M), X_T(N,M)
   INTEGER :: IP(N)
   INTEGER  :: IORD, IORDs, ISOR, NONOS, IDIV, IBC 
       
 
-  DOUBLE PRECISION :: V1(N,M),V2(N,M+1),F1(N,M),F2(N,M+1)  &
+  REAL(Kind=4) :: V1(N,M),V2(N,M+1),F1(N,M),F2(N,M+1)  &
       &      ,CP(N,M),CN(N,M)   
-  DOUBLE PRECISION :: MX(N,M),MN(N,M)
-  DOUBLE PRECISION :: EP, C1, C2, V1D, V2D, V2D1, V2DN
+  REAL(Kind=4) :: MX(N,M),MN(N,M)
+  REAL(Kind=4) :: EP, C1, C2, V1D, V2D, V2D1, V2DN
   INTEGER :: N1, N2, I, J, K, liner
   LOGICAL :: codes
 
@@ -2973,12 +2980,12 @@ END SUBROUTINE
 
 
 SUBROUTINE XBC(X,N,M)
-use implicit_functions_DP
+use implicit_functions_SP
 
 implicit none
 
 INTEGER :: N, M
-DOUBLE PRECISION :: X(N,M)
+REAL(Kind=4) :: X(N,M)
 
 INTEGER :: J
 
@@ -2990,12 +2997,12 @@ end do
 END subroutine
 
 SUBROUTINE XBC_23(X,N,M)
-use implicit_functions_DP
+use implicit_functions_SP
 
 implicit none
 
 INTEGER :: N, M
-DOUBLE PRECISION :: X(N,M)
+REAL(Kind=4) :: X(N,M)
 
 INTEGER :: J
 
@@ -3010,19 +3017,19 @@ END subroutine
 SUBROUTINE DIAGNOS(U,V,PD,PT,HX,HY,IP,S,TIME,DX,DY,DT, SUM0,SUM1, &
          & KT,N,M, IFLG, NITER,NITSM,ICOUNT,ERROR, sum_time, sum_lp_time)
 
-use implicit_functions_DP
+use implicit_functions_SP
 
 implicit none
 
 INTEGER :: N, M
 
-DOUBLE PRECISION ::  U(N,M),V(N,M),PD(N,M),PT(N,M),HX(N,M),HY(N,M),  &
+REAL(Kind=4) ::  U(N,M),V(N,M),PD(N,M),PT(N,M),HX(N,M),HY(N,M),  &
      &        S(N,M)
-DOUBLE PRECISION ::  TIME,DX,DY,DT, SUM0,SUM1,ERROR
+REAL(Kind=4) ::  TIME,DX,DY,DT, SUM0,SUM1,ERROR
 INTEGER  :: IP(N)
 INTEGER  :: KT, IFLG, NITER,NITSM,ICOUNT
-DOUBLE PRECISION :: avg_time, sum_time, avg_lp_time, sum_lp_time, NITAV
-DOUBLE PRECISION ::  GC1, GC2, COUR1, COUR2, PDMX,PDMN,PDAV, SUMER, DLI
+REAL(Kind=4) :: avg_time, sum_time, avg_lp_time, sum_lp_time, NITAV
+REAL(Kind=4) ::  GC1, GC2, COUR1, COUR2, PDMX,PDMN,PDAV, SUMER, DLI
 INTEGER ::  I, J
 
 
@@ -3113,14 +3120,14 @@ END subroutine
 
 subroutine  init_perf_markers(H_rpe,U_rpe,V_rpe, TIME_rpe, codesignQ, codesignD, &
                     &   IRHW, X_rpe, Y_rpe, N, M, bits, ID_prec, EXP_NAME)
-use implicit_functions_DP
+use implicit_functions_SP
 
 implicit none
 
-DOUBLE PRECISION ::  H_rpe(N, M), U_rpe(N, M), V_rpe(N, M), TIME_rpe, X_rpe(N), Y_rpe(M)
+REAL(Kind=4) ::  H_rpe(N, M), U_rpe(N, M), V_rpe(N, M), TIME_rpe, X_rpe(N), Y_rpe(M)
 
 integer :: N, M, IRHW, bits, ID_prec 
-DOUBLE PRECISION :: H(N, M), U(N, M), V(N, M), X(N), Y(M), TIME
+REAL(Kind=4) :: H(N, M), U(N, M), V(N, M), X(N), Y(M), TIME
 logical :: codesignQ,codesignD, itsopen
 
  character(len=150) path, file_name, experiment, simtime, codesQ, bit_count, Precond, EXP_NAME, codesD
@@ -3154,7 +3161,7 @@ endif
 end subroutine init_perf_markers
 
 subroutine  close_perf_markers()
-use implicit_functions_DP
+use implicit_functions_SP
 
  close(Unit=324)
 
@@ -3165,14 +3172,14 @@ end subroutine close_perf_markers
 
 subroutine write_perf_markers(H_rpe,U_rpe,V_rpe, TIME_rpe,  codesignQ, codesignD, IRHW, X_rpe, Y_rpe, &
                          & N, M, bits,NITER,NITSM,ICOUNT, sum_time, sum_lp_time)
-use implicit_functions_DP
+use implicit_functions_SP
 
 implicit none
 
-DOUBLE PRECISION :: H_rpe(N, M), U_rpe(N, M), V_rpe(N, M), TIME_rpe, X_rpe(N), Y_rpe(M)
+REAL(Kind=4) :: H_rpe(N, M), U_rpe(N, M), V_rpe(N, M), TIME_rpe, X_rpe(N), Y_rpe(M)
 
 integer :: N, M, IRHW, bits,NITER,NITSM,ICOUNT, NITAV
-DOUBLE PRECISION :: H(N, M), U(N, M), V(N, M), X(N), Y(M), TIME, sum_time, sum_lp_time
+REAL(Kind=4) :: H(N, M), U(N, M), V(N, M), X(N), Y(M), TIME, sum_time, sum_lp_time
 logical ::  codesignQ, codesignD
 
  character(len=150) path, file_name, experiment, simtime, codesD, codesQ, bit_count
@@ -3199,14 +3206,14 @@ end subroutine write_perf_markers
 
 subroutine  write_residual(R_rpe, exitcond, iteration, TIME_rpe,  codesignQ, codes, &
                         &  IRHW, X_rpe, Y_rpe, N, M, bits, ID_prec,EXP_NAME)
-use implicit_functions_DP
+use implicit_functions_SP
 
 
 
 
 integer :: N, M, IRHW, bits, iteration
-DOUBLE PRECISION ::  R_rpe(N, M), TIME_rpe, X_rpe(N), Y_rpe(M)
-DOUBLE PRECISION :: R(N, M), X(N), Y(M), TIME, exitcond
+REAL(Kind=4) ::  R_rpe(N, M), TIME_rpe, X_rpe(N), Y_rpe(M)
+REAL(Kind=4) :: R(N, M), X(N), Y(M), TIME, exitcond
 logical :: codesignQ, codes
 
  character(len=150) path, file_name, experiment, simtime, codesQ, codesD, bit_count, Precond, EXP_NAME, str_iter
@@ -3247,13 +3254,13 @@ end subroutine
 
 
 subroutine  write_fields(H_rpe,U_rpe,V_rpe, TIME_rpe,  codesignQ, codesignD, IRHW, X_rpe, Y_rpe, N, M, bits, ID_prec,EXP_NAME)
-use implicit_functions_DP
+use implicit_functions_SP
 
 
-DOUBLE PRECISION :: H_rpe(N, M), U_rpe(N, M), V_rpe(N, M), TIME_rpe, X_rpe(N), Y_rpe(M)
+REAL(Kind=4) :: H_rpe(N, M), U_rpe(N, M), V_rpe(N, M), TIME_rpe, X_rpe(N), Y_rpe(M)
 
 integer :: N, M, IRHW, bits
-DOUBLE PRECISION :: H(N, M), U(N, M), V(N, M), X(N), Y(M), TIME
+REAL(Kind=4) :: H(N, M), U(N, M), V(N, M), X(N), Y(M), TIME
 logical :: codesignQ, codesignD
 
  character(len=150) path, file_name, experiment, simtime, codesQ, codesD, bit_count, Precond, EXP_NAME
@@ -3325,7 +3332,7 @@ subroutine GCR_PRE(p,pfx,pfy,hx,hy,s,S_full,b,p0,pb,e1,e2,cor,ip  &
            &  sum_lp_time,ID_PREC, codes, save_time , &
            & TIME, codesQ, IRHW, DX_rpe, DY_rpe, Exit_cond, EXP_NAME&
            & , iprint, num_of_bits, DP_Depth, Alp_REL)
-use implicit_functions_DP
+use implicit_functions_SP
 
 
 implicit none
@@ -3333,20 +3340,20 @@ INTEGER, parameter :: kord=4, lord=kord-1
 
 INTEGER :: n1, n2
 
-DOUBLE PRECISION :: p(n1,n2),pfx(n1,n2),pfy(n1,n2),hx(n1,n2),hy(n1,n2),s(n1,n2), &
+REAL(Kind=4) :: p(n1,n2),pfx(n1,n2),pfy(n1,n2),hx(n1,n2),hy(n1,n2),s(n1,n2), &
      &   b(n1,n2),pb(n1,n2),p0(n1,n2), S_full,                   &
      &   e1(n1,n2),e2(n1,n2),cor(n1,n2),d(n1,n2),q(n1,n2),r(n1,n2),ar(n1,n2), &
      &   p_T(n1,n2), r_HP(n1,n2), r_true(n1,n2), r0_true(n1,n2), p_true(n1,n2), &
      &   p0_true(n1, n2), b_true(n1, n2), PMB(n1, n2), PMP0(n1, n2), qr(n1,n2)
-DOUBLE PRECISION :: MGH1IHX(n2), MGH2IHY(n2), AC(n2), BC(n2), AD(n2), BD(n2), Alp_REL(n1,n2)
+REAL(Kind=4) :: MGH1IHX(n2), MGH2IHY(n2), AC(n2), BC(n2), AD(n2), BD(n2), Alp_REL(n1,n2)
 !! preconditioning
-DOUBLE PRECISION :: qu(n1,n2), aqu(n1,n2),  A_c(n1,n2), B_c(n1,n2), C_c(n1,n2), ps(n1+1,n2), divi(n1,n2)
+REAL(Kind=4) :: qu(n1,n2), aqu(n1,n2),  A_c(n1,n2), B_c(n1,n2), C_c(n1,n2), ps(n1+1,n2), divi(n1,n2)
 INTEGER :: ID_PREC
 !! end preconditioning
 INTEGER :: IP(n1)
-DOUBLE PRECISION :: GC1, GC2,error,qrror,  max_QX_QY, epa
-DOUBLE PRECISION :: res_lats0(n2), res_lats(n2)
-DOUBLE PRECISION :: start, finish, sum_time, sum_lp_time, startLP, endLP
+REAL(Kind=4) :: GC1, GC2,error,qrror,  max_QX_QY, epa
+REAL(Kind=4) :: res_lats0(n2), res_lats(n2)
+REAL(Kind=4) :: start, finish, sum_time, sum_lp_time, startLP, endLP
 integer :: num_of_bits
 
 INTEGER :: niter,nitsm,icount
@@ -3354,27 +3361,27 @@ INTEGER :: iprint, DP_Depth
 LOGICAL :: codes, save_time
 
 
-DOUBLE PRECISION :: x(n1,n2,lord),ax(n1,n2,lord),ax2(lord),axaqu(lord),del(lord),  &
+REAL(Kind=4) :: x(n1,n2,lord),ax(n1,n2,lord),ax2(lord),axaqu(lord),del(lord),  &
      & a11(n1,n2),a12(n1,n2),a21(n1,n2),a22(n1,n2),b11(n1,n2),b22(n1,n2)
-DOUBLE PRECISION :: a11_t(n1,n2),a12_t(n1,n2),a21_t(n1,n2),a22_t(n1,n2),b11_t(n1,n2),b22_t(n1,n2)
-DOUBLE PRECISION :: err0,qrr0, rax, beta, errn, qrrn, x2, y2, T_step
+REAL(Kind=4) :: a11_t(n1,n2),a12_t(n1,n2),a21_t(n1,n2),a22_t(n1,n2),b11_t(n1,n2),b22_t(n1,n2)
+REAL(Kind=4) :: err0,qrr0, rax, beta, errn, qrrn, x2, y2, T_step
 INTEGER :: itr, J, I, l, ll, i1, it, itmn
-DOUBLE PRECISION :: eps, help1, help2, quotient, lowprectime, err_true, err0_true
-DOUBLE PRECISION :: Exit_cond
+REAL(Kind=4) :: eps, help1, help2, quotient, lowprectime, err_true, err0_true
+REAL(Kind=4) :: Exit_cond
 
-DOUBLE PRECISION ::  TIME, DX_rpe(n1), DY_rpe(n2), errnm1
+REAL(Kind=4) ::  TIME, DX_rpe(n1), DY_rpe(n2), errnm1
  character(len=150) :: EXP_NAME
 LOGICAL :: codesQ, exiting
 
 INTEGER :: IRHW , counter
 
-double precision :: err0_dp
+double precision :: err0_dp, err_true_dp, r_true_dp(n1,n2),pfx_dp(n1,n2),pfy_dp(n1,n2)
 ps(:,:)=0.0d0
 divi(:,:)=0.0d0
-
+p_T(:,:)=0.0
 !write(*,*) num_of_bits
 lowprectime=0.0d0
-p_T(:,:)=0.0d0
+
 
 ! end if
 
@@ -3382,7 +3389,7 @@ p_T(:,:)=0.0d0
 eps=1.e-5   !! original
 itr=1000
 niter=0
-itmn=1
+itmn=2
 exiting=.false.
 
 epa=1.e-30
@@ -3470,15 +3477,16 @@ endif
   call diver(r,pfx,pfy,hx,hy,s,n1,n2,ip,-1)
 
 !! calculate initial residual
+!call cpu_time(startLP)
  !! should be 23
 err0_dp=0.0d0
 err0=0.0d0
  DO J=1,n2
    DO I=1,n1
  
-    r(I,J)=rpe_05*r(I,J)-(p(I,J)-b(I,J))
+    r(I,J)=rpe_05*r(I,J)-(b(I,J))
       err0=err0+r(I,J)*r(I,J)
-    !  err0_dp=err0_dp+r_HP(I,J)*r_HP(I,J)
+   !   err0_dp=err0_dp+r_HP(I,J)*r_HP(I,J)
     !write(*,*) I, J, r_HP(I,J), p(I,J),b(I,J),err0 &
     !      &,E1(I,J), E2(I,j), pb(I,J), p0(I, J)
 
@@ -3503,6 +3511,7 @@ endif
 !call diver(r,pfx,pfy,hx,hy,s,n1,n2,ip,-1)
 !write(*,*) 'diver_depth'
 
+!call cpu_time(start) 
 
 !err0=0.0d0
 
@@ -3515,15 +3524,19 @@ endif
     errnm1=err0
 
 !! should be num_of_bits
+!call cpu_time(startLP)
 
 
 !err0 =maxval(ABS(r_HP(:,:)))
 
 if (iprint==1) then
     call write_residual(r,eps*Exit_cond, niter, TIME, codesQ, codes, IRHW, DX_rpe, DY_rpe,&
-                     & n1, n2, num_of_bits, ID_PREC ,EXP_NAME)
-    call write_residual(p_T,eps*Exit_cond, niter, TIME, codesQ, codes, IRHW, DX_rpe, DY_rpe,&
-                     & n1, n2, num_of_bits, 2 ,EXP_NAME)
+                     & n1, n2, num_of_bits, 7 ,EXP_NAME)
+endif
+
+if (iprint==1) then
+    call write_residual(r,eps*Exit_cond, niter, TIME, codesQ, codes, IRHW, DX_rpe, DY_rpe,&
+                     & n1, n2, num_of_bits, 8 ,EXP_NAME)
 endif
 
 
@@ -3532,7 +3545,7 @@ endif
 
 
 
-
+!call cpu_time(startLP)
 
 call precon(r,x(:,:,1),ax(:,:,1), T_step,  A_c, ps, divi,a11,a12,a21,a22,b11,b22,p0,  &
                 &   pfx,pfy,s,S_full,n1,n2,ip,ID_PREC, num_of_bits, DP_Depth)
@@ -3573,6 +3586,7 @@ qrr0=sqrt(qrr0)
 
    !! end of rewrite
 
+!call cpu_time(endLP)
 lowprectime=lowprectime + endLP-startLP
 
 do it=1,itr
@@ -3623,8 +3637,6 @@ do it=1,itr
 
 
 
-
-
    !! end of rewrite
 !    DO J=1,n2
 !      DO I=1,n1
@@ -3655,23 +3667,124 @@ do it=1,itr
 
 !!! true residual
 
-if (iprint==1) then
-r_true(:,:)=0.0d0
-call laplfirst(p_true(:,:)+p_T(:,:),r_true(:,:),a11_t,a12_t,a21_t,a22_t,b11_t,b22_t, p0_true,   &
-     &                           pfx,pfy,s,n1,n2,ip)
+r_true_dp(:,:)=0.0d0
+!call laplfirst(p_true(:,:)+p_T(:,:),r_true(:,:),a11_t,a12_t,a21_t,a22_t,b11_t,b22_t, p0_true,   &
+!     &                           pfx,pfy,s,n1,n2,ip)
 
-DO J=1,n2
+!  CALL PRFORC_ABS(p_true(:,:)+p_T(:,:),pfx,pfy,pb,p0, &
+!       &      E1(:,:),E2(:,:),HX,HY,COR,n1,n2,IP,GC1,GC2,Alp_REL,1,1)
+!  call diver(r_true,pfx,pfy,hx,hy,s,n1,n2,ip,-1)
+  CALL PRFORC_ABS_dp(dble(p(:,:)),pfx_dp,pfy_dp,dble(pb),dble(p0), &
+       &      dble(E1(:,:)),dble(E2(:,:)),dble(HX),dble(HY),dble(COR), &
+       &      n1,n2,IP,dble(GC1),dble(GC2),dble(Alp_REL),1,1)
+  call diver_dp(r_true_dp,pfx_dp,pfy_dp,dble(hx),dble(hy),dble(s),n1,n2,ip,-1)
+  
+  DO J=1,n2
   DO I=1,n1
-    r_true(I,J)=0.5d0*r_true(I,J)-(p_true(I,J)+p_T(I,J)-b_true(I,J))
+    r_true_dp(I,J)=0.5d0*r_true_dp(I,J)-(dble(p(I,J))-dble(p_true(I,J))+dble(b(I,J)))
  ! write(*,*), i, J, P(i,J)
   enddo
 enddo
+err_true_dp=0.0
+      DO J=1,n2
+        DO I=1,n1
+         err_true_dp=err_true_dp+r_true_dp(I,J)*r_true_dp(I,J)
+        enddo
+      enddo
+    !  write(*,*) 'errn_true model view', sqrt(err_true_dp)
+   !! how well does the solver converge?
+   r_true_dp(:,:)=0.0d0
+!call laplfirst(p_true(:,:)+p_T(:,:),r_true(:,:),a11_t,a12_t,a21_t,a22_t,b11_t,b22_t, p0_true,   &
+!     &                           pfx,pfy,s,n1,n2,ip)
+
+!  CALL PRFORC_ABS(p_true(:,:)+p_T(:,:),pfx,pfy,pb,p0, &
+!       &      E1(:,:),E2(:,:),HX,HY,COR,n1,n2,IP,GC1,GC2,Alp_REL,1,1)
+!  call diver(r_true,pfx,pfy,hx,hy,s,n1,n2,ip,-1)
+  CALL PRFORC_ABS_dp(dble(p_true(:,:))+dble(p_T(:,:)),pfx_dp,pfy_dp,dble(pb),dble(p0), &
+       &      dble(E1(:,:)),dble(E2(:,:)),dble(HX),dble(HY),dble(COR), &
+       &      n1,n2,IP,dble(GC1),dble(GC2),dble(Alp_REL),1,1)
+  call diver_dp(r_true_dp,pfx_dp,pfy_dp,dble(hx),dble(hy),dble(s),n1,n2,ip,-1)
+  
+  DO J=1,n2
+  DO I=1,n1
+    r_true_dp(I,J)=0.5d0*r_true_dp(I,J)-(dble(p_T(I,J))+dble(b(I,J)))
+ ! write(*,*), i, J, P(i,J)
+  enddo
+enddo
+err_true_dp=0.0
+      DO J=1,n2
+        DO I=1,n1
+         err_true_dp=err_true_dp+r_true_dp(I,J)*r_true_dp(I,J)
+        enddo
+      enddo
+     ! write(*,*) 'errn_true tendency view', sqrt(err_true_dp)
+      if (iprint==1) then
+        !! what is the model view on convergence, what is actually added?
+r_true_dp(:,:)=0.0d0
+!call laplfirst(p_true(:,:)+p_T(:,:),r_true(:,:),a11_t,a12_t,a21_t,a22_t,b11_t,b22_t, p0_true,   &
+!     &                           pfx,pfy,s,n1,n2,ip)
+
+!  CALL PRFORC_ABS(p_true(:,:)+p_T(:,:),pfx,pfy,pb,p0, &
+!       &      E1(:,:),E2(:,:),HX,HY,COR,n1,n2,IP,GC1,GC2,Alp_REL,1,1)
+!  call diver(r_true,pfx,pfy,hx,hy,s,n1,n2,ip,-1)
+  CALL PRFORC_ABS_dp(dble(p(:,:)),pfx_dp,pfy_dp,dble(pb),dble(p0), &
+       &      dble(E1(:,:)),dble(E2(:,:)),dble(HX),dble(HY),dble(COR), &
+       &      n1,n2,IP,dble(GC1),dble(GC2),dble(Alp_REL),1,1)
+  call diver_dp(r_true_dp,pfx_dp,pfy_dp,dble(hx),dble(hy),dble(s),n1,n2,ip,-1)
+  
+  DO J=1,n2
+  DO I=1,n1
+    r_true_dp(I,J)=0.5d0*r_true_dp(I,J)-(dble(p(I,J))-dble(p_true(I,J))+dble(b(I,J)))
+ ! write(*,*), i, J, P(i,J)
+  enddo
+enddo
+err_true_dp=0.0
+      DO J=1,n2
+        DO I=1,n1
+         err_true_dp=err_true_dp+r_true_dp(I,J)*r_true_dp(I,J)
+        enddo
+      enddo
+      !write(*,*) 'errn_true model view', sqrt(err_true_dp)
+
+    call write_residual(real(dble(p(:,:))-dble(p_true(:,:))),eps*Exit_cond, &
+            & niter+1, TIME, codesQ, codes,&
+           &  IRHW, DX_rpe, DY_rpe, n1, n2, num_of_bits, 1 ,EXP_NAME)
+    call write_residual(real(r_true_dp),eps*Exit_cond, niter+1, TIME, codesQ, codes,&
+           &  IRHW, DX_rpe, DY_rpe, n1, n2, num_of_bits, 7 ,EXP_NAME)
+
+   !! how well does the solver converge?
+   r_true_dp(:,:)=0.0d0
+!call laplfirst(p_true(:,:)+p_T(:,:),r_true(:,:),a11_t,a12_t,a21_t,a22_t,b11_t,b22_t, p0_true,   &
+!     &                           pfx,pfy,s,n1,n2,ip)
+
+!  CALL PRFORC_ABS(p_true(:,:)+p_T(:,:),pfx,pfy,pb,p0, &
+!       &      E1(:,:),E2(:,:),HX,HY,COR,n1,n2,IP,GC1,GC2,Alp_REL,1,1)
+!  call diver(r_true,pfx,pfy,hx,hy,s,n1,n2,ip,-1)
+  CALL PRFORC_ABS_dp(dble(p_true(:,:))+dble(p_T(:,:)),pfx_dp,pfy_dp,dble(pb),dble(p0), &
+       &      dble(E1(:,:)),dble(E2(:,:)),dble(HX),dble(HY),dble(COR), &
+       &      n1,n2,IP,dble(GC1),dble(GC2),dble(Alp_REL),1,1)
+  call diver_dp(r_true_dp,pfx_dp,pfy_dp,dble(hx),dble(hy),dble(s),n1,n2,ip,-1)
+  
+  DO J=1,n2
+  DO I=1,n1
+    r_true_dp(I,J)=0.5d0*r_true_dp(I,J)-(dble(p_T(I,J))+dble(b(I,J)))
+ ! write(*,*), i, J, P(i,J)
+  enddo
+enddo
+err_true_dp=0.0
+      DO J=1,n2
+        DO I=1,n1
+         err_true_dp=err_true_dp+r_true_dp(I,J)*r_true_dp(I,J)
+        enddo
+      enddo
+     ! write(*,*) 'errn_true tendency view', sqrt(err_true_dp)
 !!! end true residual
 
-    call write_residual(r,eps*Exit_cond, niter+1, TIME, codesQ, codes, IRHW,&
-           & DX_rpe, DY_rpe, n1, n2, num_of_bits, ID_prec ,EXP_NAME)
-    call write_residual(p_T,eps*Exit_cond, niter+1, TIME, codesQ, codes, IRHW,&
-           & DX_rpe, DY_rpe, n1, n2, num_of_bits, 2 ,EXP_NAME)
+    call write_residual(real(p_T),eps*Exit_cond, &
+            & niter+1, TIME, codesQ, codes,&
+           &  IRHW, DX_rpe, DY_rpe, n1, n2, num_of_bits, 2 ,EXP_NAME)
+    call write_residual(real(r_true_dp),eps*Exit_cond, niter+1, TIME, codesQ, codes,&
+           &  IRHW, DX_rpe, DY_rpe, n1, n2, num_of_bits, 8 ,EXP_NAME)
 endif
 
 
@@ -3691,10 +3804,10 @@ endif
    ! read(*,*)
 
     errn=sqrt(errn)
-   ! write(*,*) niter, errn, err0
-   !read(*,*)
-    if(errn.lt.eps*err0 .and. it > itmn) exiting=.true.
+   write(*,*) niter, errn, err0
+    if( niter+2 > itmn) exiting=.true.
     if(errn.ge.errnm1) exiting=.true.
+    !exiting=.true.  ! one iteration
     errnm1=errn
 !if(maxval(ABS(r_HP(:,:))) .lt. eps*Exit_cond) exit
 
@@ -3908,13 +4021,13 @@ end subroutine
 
 subroutine precon_prep_depth(T_step,A, ps, divi, A11,A12,A21,A22,B11,B22,P0,U,V,S,N,M,IP,ID_PREC,num_of_bits, DP_Depth)
 
-use implicit_functions_DP
+use implicit_functions_SP
 
 implicit none
-DOUBLE PRECISION ::  R(N,M),QU(N,M),A11(N,M),A12(N,M),A21(N,M),A22(N,M),  &
+REAL(Kind=4) ::  R(N,M),QU(N,M),A11(N,M),A12(N,M),A21(N,M),A22(N,M),  &
     &      B11(N,M),B22(N,M),P0(N,M),U(N,M),V(N,M),S(N,M), S_L(N, M)
-DOUBLE PRECISION ::   A(N,M), B(N,M), C(N,M),ps(N+1,M), divi(N,M)
-DOUBLE PRECISION ::  AQU(N,M), T_step, Delta_t, max_QX_QY
+REAL(Kind=4) ::   A(N,M), B(N,M), C(N,M),ps(N+1,M), divi(N,M)
+REAL(Kind=4) ::  AQU(N,M), T_step, Delta_t, max_QX_QY
 INTEGER :: IP(N), ID_PREC, num_of_bits, DP_Depth
 INTEGER :: N, M, I, J
 
@@ -3969,7 +4082,7 @@ enddo
 T_step=max_QX_QY !0.92d0!
 Delta_t=rpe_1/T_step
 
-write(*,*) 'Delta_T',Delta_t
+!write(*,*) 'Delta_T',Delta_t
 
 !max_QX_QY=(rpe_2*abs(A21(1,1)))/( ( (2.0d0*acos(-1.0d0)/Dfloat(M)) *6371.22E+03 )**2 )
 !DO J=1,M
@@ -4100,13 +4213,13 @@ end subroutine
 
 subroutine precon(R,QU,AQU, T_step,A, ps, divi, A11,A12,A21,A22,B11,B22,P0,U,V,S, S_full,N,M,IP,ID_PREC, num_of_bits,DP_Depth)
 
-use implicit_functions_DP
+use implicit_functions_SP
 
 implicit none
-DOUBLE PRECISION ::  R(N,M),QU(N,M),A11(N,M),A12(N,M),A21(N,M),A22(N,M),  &
+REAL(Kind=4) ::  R(N,M),QU(N,M),A11(N,M),A12(N,M),A21(N,M),A22(N,M),  &
     &      B11(N,M),B22(N,M),P0(N,M),U(N,M),V(N,M),S(N,M)
-DOUBLE PRECISION ::  A(N,M), B(N,M), C(N,M), ps(N+1,M), divi(N,M)
-DOUBLE PRECISION ::  AQU(N,M), T_step, S_full
+REAL(Kind=4) ::  A(N,M), B(N,M), C(N,M), ps(N+1,M), divi(N,M)
+REAL(Kind=4) ::  AQU(N,M), T_step, S_full
 INTEGER :: IP(N), ID_PREC, num_of_bits,DP_Depth
 INTEGER :: N, M, I, J
 
@@ -4143,22 +4256,22 @@ end subroutine
 !   implement ADI type preconditioner based on q_n+1 =q_n + dt{ Lz(q_n+1) + Lm(q_n) + H(q_n+1) -R}
 !
 SUBROUTINE precon_ADI(R,QU , T_step,  A, ps, divi,A11,A12,A21,A22,B11,B22,P0,U,V,S,S_full,N,M,IP,ID_PREC, num_of_bits,DP_Depth)
-use implicit_functions_DP
+use implicit_functions_SP
 
 implicit none
 
-DOUBLE PRECISION :: R(N,M),QU(N,M),A11(N,M),A12(N,M),A21(N,M),A22(N,M),  &
+REAL(Kind=4) :: R(N,M),QU(N,M),A11(N,M),A12(N,M),A21(N,M),A22(N,M),  &
     &      B11(N,M),B22(N,M),P0(N,M),U(N,M),V(N,M),S(N,M),  C11(N,M)
 INTEGER :: IP(N), ID_PREC, num_of_bits,DP_Depth
 INTEGER :: N, M
 
-DOUBLE PRECISION :: max_QX_QY, F(N,M), rhs(N,M), qs(N+1,M,0:4), ps(N+1,M), ws(N+1,M,0:4), A(N,M), B(N,M), C(N,M), divi(N,M)
-DOUBLE PRECISION :: aa(M,1:4), deti, det40, det41, det42, det43, det44, det3,   &
+REAL(Kind=4) :: max_QX_QY, F(N,M), rhs(N,M), qs(N+1,M,0:4), ps(N+1,M), ws(N+1,M,0:4), A(N,M), B(N,M), C(N,M), divi(N,M)
+REAL(Kind=4) :: aa(M,1:4), deti, det40, det41, det42, det43, det44, det3,   &
                            & d11, d12, d13, d14, d21, d22, d23, d24,       &
                            & d31, d32, d33, d34, d41, d42, d43, d44,       &
                            & s1, s2, s3, s4
-DOUBLE PRECISION ::T_step, Delta_t, dn, dni, S_full, util, vtil, swcp
-!DOUBLE PRECISION :: 
+REAL(Kind=4) ::T_step, Delta_t, dn, dni, S_full, util, vtil, swcp
+!REAL(Kind=4) :: 
 integer :: iter, max_iter, time_scale  !! number of richardson iterations
 INTEGER :: I, J, iteration
 
@@ -4587,22 +4700,22 @@ END SUBROUTINE
 
 SUBROUTINE precon_ADI_Piotr(R,QU , T_step,  A, ps, &
 &  divi,A11,A12,A21,A22,B11,B22,P0,U,V,S,S_full,N,M,IP,ID_PREC, num_of_bits,DP_Depth)
-use implicit_functions_DP
+use implicit_functions_SP
 
 implicit none
 
-DOUBLE PRECISION :: R(N,M),QU(N,M),A11(N,M),A12(N,M),A21(N,M),A22(N,M),  &
+REAL(Kind=4) :: R(N,M),QU(N,M),A11(N,M),A12(N,M),A21(N,M),A22(N,M),  &
     &      B11(N,M),B22(N,M),P0(N,M),U(N,M),V(N,M),S(N,M),  C11(N,M)
 INTEGER :: IP(N), ID_PREC, num_of_bits,DP_Depth
 INTEGER :: N, M
 
-DOUBLE PRECISION :: max_QX_QY, F(N,M), rhs(N,M), qs(0:N-1,M,0:2), ps(0:N-2,M), ws(N-1,M,0:4), A(N,M), B(N,M), C(N,M), divi(N,M)
-DOUBLE PRECISION :: aa(M,1:4), deti, det40, det41, det42, det43, det44, det3,   &
+REAL(Kind=4) :: max_QX_QY, F(N,M), rhs(N,M), qs(0:N-1,M,0:2), ps(0:N-2,M), ws(N-1,M,0:4), A(N,M), B(N,M), C(N,M), divi(N,M)
+REAL(Kind=4) :: aa(M,1:4), deti, det40, det41, det42, det43, det44, det3,   &
                            & d11, d12, d13, d14, d21, d22, d23, d24,       &
                            & d31, d32, d33, d34, d41, d42, d43, d44,       &
                            & s1, s2, s3, s4
-DOUBLE PRECISION ::T_step, Delta_t_I, dn, dni, S_full, util, vtil, swcp
-!DOUBLE PRECISION :: 
+REAL(Kind=4) ::T_step, Delta_t_I, dn, dni, S_full, util, vtil, swcp
+!REAL(Kind=4) :: 
 integer :: iter, max_iter, time_scale  !! number of richardson iterations
 INTEGER :: I, J, iteration, i2, il1, il2
 
@@ -4999,7 +5112,7 @@ function det3(r11,r12,r13,r21,r22,r23,r31,r32,r33)
 
 
 implicit none
-DOUBLE PRECISION ::  r11,r12,r13,r21,r22,r23,r31,r32,r33, det3
+REAL(Kind=4) ::  r11,r12,r13,r21,r22,r23,r31,r32,r33, det3
 
         det3=    r11*r22*r33+r12*r23*r31+r13*r21*r32    &
             &     -r31*r22*r13-r32*r23*r11-r33*r21*r12
@@ -5008,20 +5121,20 @@ end function det3
 
 
 SUBROUTINE precon_Jac(R,QU , T_step,  A, ps, divi,A11,A12,A21,A22,B11,B22,P0,U,V,S,N,M,IP,ID_PREC, num_of_bits,DP_Depth)
-use implicit_functions_DP
+use implicit_functions_SP
 
 
 implicit none
 
-DOUBLE PRECISION ::  R(N,M),QU(N,M),A11(N,M),A12(N,M),A21(N,M),A22(N,M),  &
+REAL(Kind=4) ::  R(N,M),QU(N,M),A11(N,M),A12(N,M),A21(N,M),A22(N,M),  &
     &      B11(N,M),B22(N,M),P0(N,M),U(N,M),V(N,M),S(N,M)
 INTEGER :: IP(N), ID_PREC, num_of_bits,DP_Depth
 INTEGER :: N, M
 
-DOUBLE PRECISION ::   ps(N+1,M), A(N,M), divi(N,M), rhs(N,M)
+REAL(Kind=4) ::   ps(N+1,M), A(N,M), divi(N,M), rhs(N,M)
 
-DOUBLE PRECISION :: T_step, swc, betap
-!DOUBLE PRECISION :: 
+REAL(Kind=4) :: T_step, swc, betap
+!REAL(Kind=4) :: 
 
 INTEGER :: I, J, it, itr, line
 
@@ -5072,17 +5185,17 @@ END SUBROUTINE
 
 subroutine linop(p,r,a11,a12,a21,a22,b11,b22, &
      &               A,s,ip,swc,N,M)
-use implicit_functions_DP
+use implicit_functions_SP
 
 implicit none
 
-DOUBLE PRECISION ::  p(n,m),r(n,m), &
+REAL(Kind=4) ::  p(n,m),r(n,m), &
      &          a11(n,m),a12(n,m),a21(n,m),a22(n,m),b11(n,m),b22(n,m), &
      &          A(n,m),s(n,m)
 integer :: ip(n), N, M
-DOUBLE PRECISION :: swc
+REAL(Kind=4) :: swc
 
-DOUBLE PRECISION ::  pfx(n,m), pfy(n,m), util, vtil
+REAL(Kind=4) ::  pfx(n,m), pfy(n,m), util, vtil
 INTEGER :: I, J
 
 
@@ -5164,11 +5277,11 @@ INTEGER :: I, J
 end subroutine
 
 subroutine adjust_conservation(p,s,S_full,n,m)
-use implicit_functions_DP
+use implicit_functions_SP
 
 implicit none
-DOUBLE PRECISION :: p(n,m),s(n,m)
-DOUBLE PRECISION :: S_full, cnst
+REAL(Kind=4) :: p(n,m),s(n,m)
+REAL(Kind=4) :: S_full, cnst
 INTEGER :: N, M
 
 INTEGER :: I, J
@@ -5195,11 +5308,11 @@ end subroutine
 
 
 subroutine diagoc(T_step,A_c,a11,a22,s, N, M, DP_depth)
-use implicit_functions_DP
+use implicit_functions_SP
 
 implicit none
-      DOUBLE PRECISION ::A_c(N,M),a11(N,M),a22(N,M),s(N,M)
-      DOUBLE PRECISION :: T_step
+      REAL(Kind=4) ::A_c(N,M),a11(N,M),a22(N,M),s(N,M)
+      REAL(Kind=4) :: T_step
       integer :: itr,itmn, DP_depth, N, M
 
 INTEGER :: I,J
@@ -5246,20 +5359,20 @@ enddo
 end subroutine
 
 SUBROUTINE RHWT(U0,V0,PT0,PD0,P0,COR,X,Y,N,M,F0,A, TIME)
-use implicit_functions_DP
+use implicit_functions_SP
 
 implicit none
-DOUBLE PRECISION :: PT0(N,M), PD0(N,M), P0(N,M)
+REAL(Kind=4) :: PT0(N,M), PD0(N,M), P0(N,M)
 
-DOUBLE PRECISION :: U0(N,M),V0(N,M)
-DOUBLE PRECISION :: COR(N,M),X(N),Y(M),F0, A, XX(N), TIME
+REAL(Kind=4) :: U0(N,M),V0(N,M)
+REAL(Kind=4) :: COR(N,M),X(N),Y(M),F0, A, XX(N), TIME
 INTEGER :: N, M
 
 
-DOUBLE PRECISION ::     ATH(M), BTH(M), CTH(M), TH
-DOUBLE PRECISION ::    OM,K,PH0
+REAL(Kind=4) ::     ATH(M), BTH(M), CTH(M), TH
+REAL(Kind=4) ::    OM,K,PH0
 
-DOUBLE PRECISION :: Grav, GRI, PI2, VNIU
+REAL(Kind=4) :: Grav, GRI, PI2, VNIU
 INTEGER :: R, I, J
 
 OM=7.848E-6
@@ -5312,13 +5425,13 @@ END SUBROUTINE
 
 SUBROUTINE PRFORC_ABS( P,F1,F2,PB,P0,E1,E2,HX,HY,COR,       &
      &            N,M,IP,GC1,GC2,Alp_REL, NOR,IRS)
-use implicit_functions_DP
+use implicit_functions_SP
 
 implicit none
-DOUBLE PRECISION :: P(N,M),F1(N,M),F2(N,M),PB(N,M),P0(N,M),E1(N,M),E2(N,M), &
+REAL(Kind=4) :: P(N,M),F1(N,M),F2(N,M),PB(N,M),P0(N,M),E1(N,M),E2(N,M), &
      & HX(N,M),HY(N,M),COR(N,M)
-DOUBLE PRECISION :: GC1, GC2
-DOUBLE PRECISION :: Alp_REL(N,M)
+REAL(Kind=4) :: GC1, GC2
+REAL(Kind=4) :: Alp_REL(N,M)
 
 INTEGER  :: IP(N)
 INTEGER  :: N, M, NOR, IRS
@@ -5326,7 +5439,7 @@ INTEGER  :: N, M, NOR, IRS
 
 INTEGER :: I, J, NM
 
-DOUBLE PRECISION :: GH1, GH2, UTILD, VTILD, GMM, AMM, DETI, A, B
+REAL(Kind=4) :: GH1, GH2, UTILD, VTILD, GMM, AMM, DETI, A, B
 
 GH1=rpe_05*GC1
 GH2=rpe_05*GC2
@@ -5382,16 +5495,16 @@ END SUBROUTINE
 
 
 SUBROUTINE POLARABS(ALP,atau,Y,DT,N,M,IRHW)
-use implicit_functions_DP
+use implicit_functions_SP
 
 implicit none
 
-DOUBLE PRECISION :: ALP(N,M)
+REAL(Kind=4) :: ALP(N,M)
  
-DOUBLE PRECISION :: Y(M), DT
+REAL(Kind=4) :: Y(M), DT
 INTEGER :: N, M, IRHW
 
-DOUBLE PRECISION :: eps, pi, abswidth, atau, alpha, &
+REAL(Kind=4) :: eps, pi, abswidth, atau, alpha, &
        & ymax, ymin, absy0_north, absy0_south, y0, y1, y2
 INTEGER :: I, J
 
@@ -5442,8 +5555,8 @@ end subroutine
 
 SUBROUTINE SMOOTHSTATE(FL,FLS,SCR1,SCR2,IP,FLIP,KT,N,M)
 implicit none
-DOUBLE PRECISION :: FL(N,M),FLS(N,M),SCR1(N,M),SCR2(N,M)
-DOUBLE PRECISION :: FLIP
+REAL(Kind=4) :: FL(N,M),FLS(N,M),SCR1(N,M),SCR2(N,M)
+REAL(Kind=4) :: FLIP
 INTEGER :: N,M, KT, IP(N)
 
 integer :: i,j
@@ -5490,11 +5603,11 @@ integer :: IFLG, KITER, kit
 
      subroutine Earthtopo(h0,x,y,n,m)
 implicit none
-      DOUBLE PRECISION :: h0(n,m),x(n),y(m)
-      DOUBLE PRECISION :: tp0(512,256),flon,flat, pi
+      REAL(Kind=4) :: h0(n,m),x(n),y(m)
+      REAL(Kind=4) :: tp0(512,256),flon,flat, pi
       integer :: n,m, jj, ii, i ,j
 
-      DOUBLE PRECISION :: h0mx, h0mn, cycmx1, cycmxn
+      REAL(Kind=4) :: h0mx, h0mn, cycmx1, cycmxn
 
       pi = acos(-1.)
 
@@ -5530,11 +5643,11 @@ implicit none
 
       SUBROUTINE SMOOTHTOP(FL,SCR,IP,N,M)
       implicit none
-      DOUBLE PRECISION :: FL(N,M),SCR(N,M)
+      REAL(Kind=4) :: FL(N,M),SCR(N,M)
       INTEGER :: IP(N), N, M
 
 
-      DOUBLE PRECISION :: h0mx, h0mn
+      REAL(Kind=4) :: h0mx, h0mn
       INTEGER :: kiter, kit, I, J
 
       KITER=1
@@ -5581,4 +5694,128 @@ implicit none
 
       END subroutine
 
+SUBROUTINE PRFORC_ABS_dp( P,F1,F2,PB,P0,E1,E2,HX,HY,COR,       &
+     &            N,M,IP,GC1,GC2,Alp_REL, NOR,IRS)
+
+implicit none
+double precision :: P(N,M),F1(N,M),F2(N,M),PB(N,M),P0(N,M),E1(N,M),E2(N,M), &
+     & HX(N,M),HY(N,M),COR(N,M)
+double precision :: GC1, GC2
+double precision ::Alp_REL(N,M)
+
+INTEGER  :: IP(N)
+INTEGER  :: N, M, NOR, IRS
+
+
+INTEGER :: I, J, NM
+
+double precision :: GH1, GH2, UTILD, VTILD, GMM, AMM, DETI, A, B
+GH1=0.5d0*GC1
+GH2=0.5d0*GC2
+
+DO J=2,M-1
+  DO I=2,N-1
+    F1(I,J)=-GH1*(P(I+1,J)-P(I-1,J))/HX(I,J)
+    F2(I,J)=-GH2*(P(I,J+1)-P(I,J-1))/HY(I,J)
+  end do
+end do
+
+DO I=2,N-1
+  F1(I,1)=-GH1*(P(I+1,1)-P(I-1,1))/HX(I,1)
+  F1(I,M)=-GH1*(P(I+1,M)-P(I-1,M))/HX(I,M)
+  F2(I,1)=-GH2*(P(I,2)-P(IP(I),1))/HY(I,1)
+  F2(I,M)=-GH2*(P(IP(I),M)-P(I,M-1))/HY(I,M)
+end do
+
+CALL XBC_dp(F1,N,M)
+CALL XBC_dp(F2,N,M)
+
+IF(NOR.EQ.1) THEN
+!  NM=N*M
+
+!  DO I=1,NM
+!    UTILD=F1(I,1)*(P0(I,1)-PB(I,1))+(P(I,1)-IRS*P0(I,1))*E1(I,1)
+!    VTILD=F2(I,1)*(P0(I,1)-PB(I,1))+(P(I,1)-IRS*P0(I,1))*E2(I,1)
+!    GMM=.5*COR(I,1)
+!    F1(I,1)=(UTILD+GMM*VTILD)/(1.+GMM**2)*GH1
+!    F2(I,1)=(VTILD-GMM*UTILD)/(1.+GMM**2)*GH2
+!  end do
+  DO J=1,M
+    DO I=1,N
+      UTILD=F1(I,J)*(P0(I,J)-PB(I,J))+(P(I,J)-IRS*P0(I,J))*E1(I,J)
+      VTILD=F2(I,J)*(P0(I,J)-PB(I,J))+(P(I,J)-IRS*P0(I,J))*E2(I,J)
+
+      AMM=1.+.5*Alp_REL(I,J)
+      GMM=.5*COR(I,J)
+      DETI=1./(AMM**2+GMM**2)
+
+      A=AMM*DETI
+      B=GMM*DETI
+
+      F1(I,J)=(A*UTILD+B*VTILD)*GH1
+      F2(I,J)=(A*VTILD-B*UTILD)*GH2
+    end do
+  end do
+CALL XBC_dp(F1,N,M)
+CALL XBC_dp(F2,N,M)
+ENDIF
+
+END SUBROUTINE
+SUBROUTINE DIVER_dp(F, U,  V, HX,HY,S, N, M,IP,IFLG)
+
+ implicit none
+
+double precision :: F(N,M),U(N,M),V(N,M),HX(N,M),HY(N,M),S(N,M)
+INTEGER :: IP(N)
+INTEGER :: N, M, IFLG
+
+
+INTEGER:: I, J
+
+DO J=2,M-1
+  DO I=2,N-1
+    F(I,J)= HY(I+1,J)*U(I+1,J)-HY(I-1,J)*U(I-1,J)        &
+        &  +HX(I,J+1)*V(I,J+1)-HX(I,J-1)*V(I,J-1)
+  end do
+end do
+
+! original
+DO I=2,N-1
+  F(I,1)= HY(I+1,1)*U(I+1,1)-HY(I-1,1)*U(I-1,1) &
+      &  +(HX(I,2)*V(I,2)+HX(I,1)*V(I,1))
+  F(I,M)= HY(I+1,M)*U(I+1,M)-HY(I-1,M)*U(I-1,M)  &
+      &  -(HX(I,M)*V(I,M)+HX(I,M-1)*V(I,M-1))
+end do
+! end original
+
+
+
+DO J=1,M
+  DO I=2,N-1
+    F(I,J)=0.5d0*IFLG*F(I,J)/S(I,J)
+  end do
+end do
+
+DO J=1,M
+  F(1,J)=F(N-1,J)
+  F(N,J)=F(2  ,J)
+end do
+
+END SUBROUTINE
+SUBROUTINE XBC_dp(X,N,M)
+
+
+implicit none
+
+INTEGER :: N, M
+double precision :: X(N,M)
+
+INTEGER :: J
+
+DO J=1,M
+  X(1,J)=X(N-1,J)
+  X(N,J)=X(2,J)
+end do
+
+END subroutine
 

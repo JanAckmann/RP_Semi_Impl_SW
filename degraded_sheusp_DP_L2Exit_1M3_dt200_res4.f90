@@ -186,14 +186,14 @@ DOUBLE PRECISION :: D0, &
 DOUBLE PRECISION :: D_Adv(N,M)
  
 ! the rest
-DOUBLE PRECISION :: GMM, SUM1, SUM0, start, finish
+DOUBLE PRECISION :: GMM, SUM1, SUM0
 INTEGER :: I, J, KF, KT, NPLOT, NPRINT, NT, num_of_bits, ID_PREC
 INTEGER :: stencil, ueber
 
 logical :: codesignQ, codesignD, mountain, gcr23, save_time
 mountain = .false.
  !!! RPE VARIABLES
-call cpu_time(start)
+
 
 
   codesignQ = .FALSE.
@@ -215,7 +215,7 @@ do ID_PREC=7,7,-5
    write(Dp_depth_str,*) DP_Depth
 
   !ID_PREC=0
-   EXP_NAME= 'data/sheusp_DP_L2Exit_1M3_dt200_res4'
+   EXP_NAME= 'data/degraded_sheusp_DP_L2Exit_1M3_dt200_res4'
   ! EXP_NAME= 'data_ADI_Precon_init23'
 
 
@@ -272,7 +272,7 @@ DT_23=100.0d0
 KMX=4
 mpfl=999999
 elseif(IRHW==1) then
-NT = 6480 !  6376 !int(6376*(200.0/240.0)) !12960  
+NT =  6480! 6376 !int(6376*(200.0/240.0)) !12960  
 NPRINT =216 !797 !797 !int(797*(200.0/240.0)) !864 !DATA NT,NPRINT/12096,864/
 !NT = 6376 !int(6376*(200.0/240.0)) !12960  
 !NPRINT =200 !797 !797 !int(797*(200.0/240.0)) !864
@@ -281,8 +281,8 @@ KMX=4
 atau=200.*DT_23 ! RHW4
 mpfl=999999
 elseif(IRHW==3) then
-NT =  6480 ! 6376 !int(6376*(200.0/240.0)) !12960  
-NPRINT =216  !797 !797 !int(797*(200.0/240.0)) !864 !DATA NT,NPRINT/12096,864/
+NT =  6480! 6376 !int(6376*(200.0/240.0)) !12960  
+NPRINT =216 !797 !797 !int(797*(200.0/240.0)) !864 !DATA NT,NPRINT/12096,864/
 !NT = 6376 !int(6376*(200.0/240.0)) !12960  
 !NPRINT = 200 !797 !797 !797 !int(797*(200.0/240.0)) !864
 DT_23=200.0d0
@@ -444,6 +444,7 @@ DO J=1,M
 
 
     HX_23(I,J)=R_23*COS(Y_23(J))
+
     HX(I,J) = HX_23(I,J)
     HY_23(I,J)=R_23
     HY(I,J) = HY_23(I,J)
@@ -497,6 +498,7 @@ elseif (IRHW.EQ.3)then
 else
   P0_HP(:,:)=0.0
 endif
+
 IF(IRHW.EQ.0) CALL INITZON(U_23,V_23,PT_HP,COR_23,X_23,Y_23,N,M,F0_23,BETA_23,H00_23,R_23,PVEL_23)
 IF(IRHW.EQ.1) CALL INITRHW(U_23,V_23,PT_HP,COR_23,X_23,Y_23,N,M,F0_23,R_23)
 IF(IRHW.EQ.2) CALL INITZON(U_23,V_23,PT_HP,COR_23,X_23,Y_23,N,M,F0_23,BETA_23,H00_23,R_23,PVEL_23)
@@ -885,7 +887,7 @@ IF(IANAL.EQ.0) THEN
   ! end gcrtest1
 
 ! COMPUTE FIRST GUESS FROM ADVECTION
-  !write(*,*) 'into GCR'
+
   CALL  GCR_PRE(PT,F1(:,:,0),F2(:,:,0),HX,HY,S,S_full,F1(:,:,1),F2(:,:,1), &
        &      PD(:,:),E1(:,:,0),E2(:,:,0),COR,IP, &
        &      U(:,:,0),U(:,:,1),V(:,:,0),V(:,:,1),N,M,GC1,GC2,   &
@@ -1001,8 +1003,8 @@ if (.not. (KT/NPRINT*NPRINT.NE.KT)) then
 !write(*,*) 0.5d0*(div_old(1,1)+div_new(1,1))*G_23, -PD_old(1,1)+ PT(1,1)
 !write(*,*) 0.5d0*(div_old(1,1)+div_new(1,1))*G_23 -PD_old(1,1)+ PT(1,1)
 
-!write(*,*) 'r EVAL'
-!  write(*,*) (maxval(abs(r_eval(:,J))), J=1,M)
+write(*,*) 'r EVAL'
+  write(*,*) (maxval(abs(r_eval(:,J))), J=1,M)
 !read(*,*)
 
 endif
@@ -1127,9 +1129,6 @@ call close_perf_markers
   end do
  end do
 enddo
-call cpu_time(finish)
-
-write(*,*) 'Total runtime', finish-start
 
 END program
 
@@ -3374,7 +3373,7 @@ divi(:,:)=0.0d0
 
 !write(*,*) num_of_bits
 lowprectime=0.0d0
-p_T(:,:)=0.0d0
+
 
 ! end if
 
@@ -3465,20 +3464,21 @@ endif
 !call laplfirst_depth(p(:,:),r_HP(:,:), a11,a12,a21,a22,b11,b22,PMP0,&
 !     &                     pfx,pfy,S,n1,n2,IP, 23,DP_Depth)
 !with Piotr's
-  CALL PRFORC_ABS(p(:,:),pfx,pfy,pb,p0, &
+  CALL PRFORC_ABS(dble(real(p(:,:))),pfx,pfy,pb,p0, &
        &      E1(:,:),E2(:,:),HX,HY,COR,n1,n2,IP,GC1,GC2,Alp_REL,1,1)
-  call diver(r,pfx,pfy,hx,hy,s,n1,n2,ip,-1)
+  call diver(r_HP,pfx,pfy,hx,hy,s,n1,n2,ip,-1)
 
 !! calculate initial residual
+call cpu_time(startLP)
  !! should be 23
 err0_dp=0.0d0
 err0=0.0d0
  DO J=1,n2
    DO I=1,n1
  
-    r(I,J)=rpe_05*r(I,J)-(p(I,J)-b(I,J))
-      err0=err0+r(I,J)*r(I,J)
-    !  err0_dp=err0_dp+r_HP(I,J)*r_HP(I,J)
+    r_HP(I,J)=rpe_05*r_HP(I,J)-(dble(real(p(I,J)))-b(I,J))
+      err0=err0+r_HP(I,J)*r_HP(I,J)
+      err0_dp=err0_dp+r_HP(I,J)*r_HP(I,J)
     !write(*,*) I, J, r_HP(I,J), p(I,J),b(I,J),err0 &
     !      &,E1(I,J), E2(I,j), pb(I,J), p0(I, J)
 
@@ -3490,7 +3490,7 @@ err0=0.0d0
 
 if (iprint==1) then
 
-! write(*,*) (maxval(abs(r_HP(:,J))), J=1,n2) 
+ write(*,*) (maxval(abs(r_HP(:,J))), J=1,n2) 
 
 endif
 
@@ -3503,6 +3503,7 @@ endif
 !call diver(r,pfx,pfy,hx,hy,s,n1,n2,ip,-1)
 !write(*,*) 'diver_depth'
 
+call cpu_time(start) 
 
 !err0=0.0d0
 
@@ -3515,6 +3516,33 @@ endif
     errnm1=err0
 
 !! should be num_of_bits
+call cpu_time(startLP)
+      DO J=1+DP_Depth,n2-DP_Depth
+        DO I=1,n1
+ 
+          r(I,J)  = r_HP(I,J)
+
+        enddo
+      enddo
+call cpu_time(endLP)
+lowprectime=lowprectime + endLP-startLP
+
+
+      DO J=1,DP_Depth
+        DO I=1,n1
+
+          r(I,J)  = r_HP(I,J)
+
+        enddo
+      enddo
+
+      DO J=n2+1-DP_Depth,n2
+        DO I=1,n1
+
+          r(I,J)  = r_HP(I,J)
+
+        enddo
+      enddo
 
 
 !err0 =maxval(ABS(r_HP(:,:)))
@@ -3522,8 +3550,6 @@ endif
 if (iprint==1) then
     call write_residual(r,eps*Exit_cond, niter, TIME, codesQ, codes, IRHW, DX_rpe, DY_rpe,&
                      & n1, n2, num_of_bits, ID_PREC ,EXP_NAME)
-    call write_residual(p_T,eps*Exit_cond, niter, TIME, codesQ, codes, IRHW, DX_rpe, DY_rpe,&
-                     & n1, n2, num_of_bits, 2 ,EXP_NAME)
 endif
 
 
@@ -3533,6 +3559,7 @@ endif
 
 
 
+call cpu_time(startLP)
 
 call precon(r,x(:,:,1),ax(:,:,1), T_step,  A_c, ps, divi,a11,a12,a21,a22,b11,b22,p0,  &
                 &   pfx,pfy,s,S_full,n1,n2,ip,ID_PREC, num_of_bits, DP_Depth)
@@ -3573,6 +3600,7 @@ qrr0=sqrt(qrr0)
 
    !! end of rewrite
 
+call cpu_time(endLP)
 lowprectime=lowprectime + endLP-startLP
 
 do it=1,itr
@@ -3609,20 +3637,47 @@ do it=1,itr
         DO I=1,n1
          p_T(I,J)=p_T(I,J) +beta* x(I,J,l) 
          p(I,J)=p(I,J) +beta* x(I,J,l) 
-         r(I,J)  =r(I,J)   +beta*ax(I,J,l) 
+         r_HP(I,J)  =r_HP(I,J)   +beta*ax(I,J,l) 
         enddo
       enddo
 
 
       DO J=1,n2
         DO I=1,n1
-         errn=errn+r(I,J)*r(I,J)
+         errn=errn+r_HP(I,J)*r_HP(I,J)
         enddo
       enddo
 
 
 
+call cpu_time(startLP)
 
+      DO J=1+DP_Depth,n2-DP_Depth
+        DO I=1,n1
+
+         r(I,J)  = r_HP(I,J)
+
+        enddo
+      enddo
+call cpu_time(endLP)
+lowprectime=lowprectime + endLP-startLP
+
+
+      DO J=1,DP_Depth
+        DO I=1,n1
+
+         r(I,J)  = r_HP(I,J)
+
+        enddo
+      enddo
+
+      DO J=n2+1-DP_Depth,n2
+        DO I=1,n1
+
+         r(I,J)  = r_HP(I,J)
+
+        enddo
+      enddo
 
 
    !! end of rewrite
@@ -3655,7 +3710,6 @@ do it=1,itr
 
 !!! true residual
 
-if (iprint==1) then
 r_true(:,:)=0.0d0
 call laplfirst(p_true(:,:)+p_T(:,:),r_true(:,:),a11_t,a12_t,a21_t,a22_t,b11_t,b22_t, p0_true,   &
      &                           pfx,pfy,s,n1,n2,ip)
@@ -3668,10 +3722,8 @@ DO J=1,n2
 enddo
 !!! end true residual
 
-    call write_residual(r,eps*Exit_cond, niter+1, TIME, codesQ, codes, IRHW,&
-           & DX_rpe, DY_rpe, n1, n2, num_of_bits, ID_prec ,EXP_NAME)
-    call write_residual(p_T,eps*Exit_cond, niter+1, TIME, codesQ, codes, IRHW,&
-           & DX_rpe, DY_rpe, n1, n2, num_of_bits, 2 ,EXP_NAME)
+if (iprint==1) then
+    call write_residual(r,eps*Exit_cond, niter+1, TIME, codesQ, codes, IRHW, DX_rpe, DY_rpe, n1, n2, num_of_bits, 5 ,EXP_NAME)
 endif
 
 
@@ -3691,7 +3743,7 @@ endif
    ! read(*,*)
 
     errn=sqrt(errn)
-   ! write(*,*) niter, errn, err0
+   write(*,*) niter, errn, err0
    !read(*,*)
     if(errn.lt.eps*err0 .and. it > itmn) exiting=.true.
     if(errn.ge.errnm1) exiting=.true.
@@ -3713,6 +3765,7 @@ endif
 
 
 
+call cpu_time(startLP)
     call precon(r,qu, aqu , T_step,  A_c, ps, divi,a11,a12,a21,a22,b11,b22,p0,   &
                 &   pfx,pfy,s,S_full,n1,n2,ip,ID_PREC, num_of_bits, DP_Depth)
   !    do j=1,1
@@ -3752,6 +3805,7 @@ endif
     niter=niter+1
    !! end of rewrite
 
+call cpu_time(endLP)
 lowprectime=lowprectime + endLP-startLP
 !write(*,*) 'second precon', it
 
@@ -3894,6 +3948,7 @@ write(*,*) niter
 
 endif
 
+call cpu_time(finish)
 !write(*,*) niter
 
 icount=icount+1
@@ -4627,7 +4682,7 @@ end do
   END DO
 
 Delta_t_I=rpe_1/(rpe_025/T_step)
-!write(*,*) Delta_t_I, T_step
+write(*,*) Delta_t_I, T_step
 
 
       DO J=1,M

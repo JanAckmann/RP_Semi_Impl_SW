@@ -273,16 +273,19 @@ KMX=4
 mpfl=999999
 elseif(IRHW==1) then
 !DATA NT,NPRINT/12096,864/
-NT = 6376 !int(6376*(200.0/240.0)) !12960  
-NPRINT =200 !797 !797 !int(797*(200.0/240.0)) !864
+NT = 6480 ! 6376 !int(6376*(200.0/240.0)) !12960  
+NPRINT =216 !797 !797 !int(797*(200.0/240.0)) !864
+!NT = 6376 !int(6376*(200.0/240.0)) !12960  
+!NPRINT =200 !797 !797 !int(797*(200.0/240.0)) !864
 DT_23=200.0d0
 KMX=4
 atau=200.*DT_23 ! RHW4
 mpfl=999999
 elseif(IRHW==3) then
-!DATA NT,NPRINT/12096,864/
-NT = 6376 !int(6376*(200.0/240.0)) !12960  
-NPRINT = 200 !797 !797 !797 !int(797*(200.0/240.0)) !864
+NT =  6480! 6376 !int(6376*(200.0/240.0)) !12960  
+NPRINT =216 !797 !797 !int(797*(200.0/240.0)) !864 !DATA NT,NPRINT/12096,864/
+!NT = 6376 !int(6376*(200.0/240.0)) !12960  
+!NPRINT = 200 !797 !797 !797 !int(797*(200.0/240.0)) !864
 DT_23=200.0d0
 KMX=4
 atau=2.*DT_23    !Zonal flow past Earth orography
@@ -3465,7 +3468,7 @@ endif
 !with Piotr's
   CALL PRFORC_ABS(p(:,:),pfx,pfy,pb,p0, &
        &      E1(:,:),E2(:,:),HX,HY,COR,n1,n2,IP,GC1,GC2,Alp_REL,1,1)
-  call diver(r_HP,pfx,pfy,hx,hy,s,n1,n2,ip,-1)
+  call diver(r,pfx,pfy,hx,hy,s,n1,n2,ip,-1)
 
 !! calculate initial residual
 call cpu_time(startLP)
@@ -3475,9 +3478,9 @@ err0=0.0d0
  DO J=1,n2
    DO I=1,n1
  
-    r_HP(I,J)=rpe_05*r_HP(I,J)-(p(I,J)-b(I,J))
+    r(I,J)=rpe_05*r(I,J)-(p(I,J)-b(I,J))
       err0=err0+r_HP(I,J)*r_HP(I,J)
-      err0_dp=err0_dp+r_HP(I,J)*r_HP(I,J)
+    !  err0_dp=err0_dp+r_HP(I,J)*r_HP(I,J)
     !write(*,*) I, J, r_HP(I,J), p(I,J),b(I,J),err0 &
     !      &,E1(I,J), E2(I,j), pb(I,J), p0(I, J)
 
@@ -3508,40 +3511,13 @@ call cpu_time(start)
 
 
     err0=sqrt(err0)
-    err0_dp=sqrt(err0_dp)
+  !  err0_dp=sqrt(err0_dp)
       ! write(*,*)err0, err0_dp, abs(err0 -err0_dp)/err0_dp, counter
       ! read(*,*)
 
     errnm1=err0
 
 !! should be num_of_bits
-call cpu_time(startLP)
-      DO J=1+DP_Depth,n2-DP_Depth
-        DO I=1,n1
- 
-          r(I,J)  = r_HP(I,J)
-
-        enddo
-      enddo
-call cpu_time(endLP)
-lowprectime=lowprectime + endLP-startLP
-
-
-      DO J=1,DP_Depth
-        DO I=1,n1
-
-          r(I,J)  = r_HP(I,J)
-
-        enddo
-      enddo
-
-      DO J=n2+1-DP_Depth,n2
-        DO I=1,n1
-
-          r(I,J)  = r_HP(I,J)
-
-        enddo
-      enddo
 
 
 !err0 =maxval(ABS(r_HP(:,:)))
@@ -5557,7 +5533,7 @@ implicit none
           read(33,*) i,j,flon,flat,tp0(i,j)
 
 !     print*, i,j,flon,flat,tp0(i,j)
-          h0(i,j)=tp0(i,j)
+          h0(i+1,j)=tp0(i,j)
         enddo
       enddo
       call xbc(h0,n,m)

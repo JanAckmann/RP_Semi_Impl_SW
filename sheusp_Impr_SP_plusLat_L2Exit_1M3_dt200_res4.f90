@@ -66,7 +66,7 @@ REAL(Kind=4) :: sum_time, sum_lp_time
 
 !!! store old values in low prec. to calc final tend.
 
-REAL(Kind=4) ::     &
+REAL(Kind=4) ::    PD_T(N,M), &
                   & QX_T(N,M), &
                   & QY_T(N,M), &
                   & PC_T(N,M)
@@ -86,7 +86,7 @@ double precision :: PD_HP(N,M), &
                & VA_dp(N,M+1),  &
                & pd_t_dp(N,M), &        
                & QXS_dp(N,M), QYS_dp(N,M)
-double precision :: PD_T(N,M),Alp_REL_dp(N,M)
+double precision :: Alp_REL_dp(N,M)
           REAL(Kind=4) ::   UA_HP(N,M), &
                   & VA_HP(N,M)
                   
@@ -246,7 +246,7 @@ do ID_PREC=7,7,-5
    write(Dp_depth_str,*) DP_Depth
 
   !ID_PREC=0
-   EXP_NAME= 'data/sheusp_IMPR_SP_L2Exit_1M3_dt200_res4'
+   EXP_NAME= 'data/sheusp_IMPR_SP_plusLat_L2Exit_1M3_dt200_res4'
   ! EXP_NAME= 'data_ADI_Precon_init23'
 
 
@@ -286,16 +286,16 @@ KMX=4
 mpfl=999999
 elseif(IRHW==1) then
 !DATA NT,NPRINT/12096,864/
-NT = 6376 !int(6376*(200.0/240.0)) !12960  
-NPRINT =  797 !797 !797 !int(797*(200.0/240.0)) !864
+NT =6480 ! 6376 !int(6376*(200.0/240.0)) !12960  
+NPRINT = 216 ! 797 !797 !797 !int(797*(200.0/240.0)) !864
 DT=200.0d0
 KMX=4
 atau=200.*DT ! RHW4
 mpfl=999999
 elseif(IRHW==3) then
 !DATA NT,NPRINT/12096,864/
-NT = 6376 !int(6376*(200.0/240.0)) !12960  
-NPRINT = 797 !797 !797 !int(797*(200.0/240.0)) !864
+NT =6480 ! 6376 !int(6376*(200.0/240.0)) !12960  
+NPRINT = 216 ! 797 !797 !797 !int(797*(200.0/240.0)) !864
 DT=200.0d0
 KMX=4
 atau=2.*DT    !Zonal flow past Earth orography
@@ -867,12 +867,10 @@ call prepB_GCR(PD, PT,U(:,:,0), V(:,:,0),PC,P0,F1(:,:,:),  F2(:,:,:), E1(:,:,0),
        call prepB_GCR_dp(PD_dp, PT_HP,U_dp(:,:,0), V_dp(:,:,0),dble(PD_HP(:,:)+PC_T(:,:)),P0_HP&
            & ,F1_dp(:,:,:),  F2_dp(:,:,:), E1_dp(:,:,0),E2_dp(:,:,0), &
                & HX_dp,HY_dp,GC1_dp, GC2_dp,dble(COR),S_dp,G_dp,N,M,IP) 
-
+F1(:,:,1)=F1_dp(:,:,1)
 ! COMPUTE FIRST GUESS FROM ADVECTION
 
-!F1(:,:,1)=F1_dp(:,:,1)
 F1(:,:,1)=PT_HP(:,:)-F1_dp(:,:,1)
-F1_dp(:,:,1)=PT_HP(:,:)-F1_dp(:,:,1)
   CALL  GCR_PRE(PT,F1(:,:,0),F2(:,:,0),HX,HY,S,S_full,F1(:,:,1),F2(:,:,1), &
        &      PD(:,:),E1(:,:,0),E2(:,:,0),COR,IP, &
        &      U(:,:,0),U(:,:,1),V(:,:,0),V(:,:,1),N,M,GC1,GC2,   &
@@ -881,25 +879,26 @@ F1_dp(:,:,1)=PT_HP(:,:)-F1_dp(:,:,1)
        &      TIME, codesignQ, IRHW, X, Y, Exit_Cond,               &
        &  EXP_NAME, iprint, num_of_bits, DP_Depth, Alp_REL)
   write(*,*)  'GCR_PRE_dp'
-  CALL  GCR_PRE_dp(PT_HP,F1_dp(:,:,0),F2_dp(:,:,0),HX_dp,HY_dp,S_dp,&
-        & dble(S_full),F1_dp(:,:,1),F2_dp(:,:,1), &
-       &      PD_dp(:,:),E1_dp(:,:,0),E2_dp(:,:,0),dble(COR),IP, &
-       &      U_dp(:,:,0),U_dp(:,:,1),V_dp(:,:,0),V_dp(:,:,1),N,M,GC1_dp,GC2_dp,   &
+  CALL  GCR_PRE_dp(PT_HP,dble(F1(:,:,0)),dble(F2(:,:,0)),dble(HX),dble(HY),dble(S),&
+        & dble(S_full),dble(F1_dp(:,:,1)),dble(F2(:,:,1)), &
+       &      dble(PD(:,:)),dble(E1(:,:,0)),dble(E2(:,:,0)),dble(COR),IP, &
+       &      dble(U(:,:,0)),dble(U(:,:,1)),dble(V(:,:,0)),dble(V(:,:,1)),N,M,dble(GC1),dble(GC2),   &
            &   dble( MGH1IHX), dble(MGH2IHY),dble( AC), dble(BC),dble( AD),dble( BD),  &
   &      niter,nitsm,icount,dble(error), PD_T_dp, dble(sum_time),dble( sum_lp_time), ID_PREC,.FALSE., save_time,&
-       &      dble(TIME), codesignQ, IRHW, X_dp, Y_dp, dble(Exit_Cond),               &
-       &  EXP_NAME, iprint, num_of_bits, DP_Depth, Alp_REL_dp)
+       &      dble(TIME), codesignQ, IRHW, dble(X), dble(Y), dble(Exit_Cond),               &
+       &  EXP_NAME, iprint, num_of_bits, DP_Depth,dble( Alp_REL))
   write(*,*)  'GCR_PRE_dp_PT'
+PD_T_dp(:,:)=0.0d0
   CALL  GCR_PRE_imp(PT_HP,F1(:,:,0),F2(:,:,0),HX,HY,S,&
         & S_full,F1(:,:,1),F2(:,:,1), &
        &      PD(:,:),E1(:,:,0),E2(:,:,0),COR,IP, &
        &      U(:,:,0),U(:,:,1),V(:,:,0),V(:,:,1),N,M,GC1,GC2,   &
            &    MGH1IHX,MGH2IHY, AC, BC, AD, BD,  &
-  &      niter,nitsm,icount,error, PD_T,sum_time, sum_lp_time, ID_PREC,.FALSE., save_time,&
+  &      niter,nitsm,icount,error, PD_T_dp,sum_time, sum_lp_time, ID_PREC,.FALSE., save_time,&
        &      TIME, codesignQ, IRHW, X, Y, Exit_Cond,               &
        &  EXP_NAME, iprint, num_of_bits, DP_Depth, Alp_REL)
 
-   call codesign_PT(PT_HP, REAL(PD_T),N, M)
+   call codesign_PT(PT_HP, PD_T_dp,N, M)
    IF ( codesignD) then
       DO J=1,M
         DO I=1,N
@@ -1104,7 +1103,8 @@ END program
       implicit none
 
    double precision :: PT_HP(N,M)
-   REAL(KIND=4) :: PD_T(N,M)
+   double precision :: PD_T(N,M)
+   !REAL(KIND=4) :: PD_T(N,M)
    INTEGER :: N, M
    INTEGER :: I, J
 
@@ -1352,7 +1352,7 @@ INTEGER :: I, J
 !endif
     DO J=1,M
       DO I=1,N
-        F1(I,J)=-rpe_05*F1(I,J)
+        F1(I,J)=PD(I,J)+P0(I,J)-rpe_05*F1(I,J)
       end do
     end do
 
@@ -5046,7 +5046,7 @@ end subroutine
 subroutine GCR_PRE_imp(p,pfx,pfy,hx,hy,s,S_full,b,p0,pb,e1,e2,cor,ip  &
               & ,d,q,r,ar,n1,n2,gc1,gc2, &
            &    MGH1IHX, MGH2IHY, AC, BC, AD, BD,  &
-           &  niter,nitsm,icount,error, p_T, sum_time,&
+           &  niter,nitsm,icount,error, p_T_dp, sum_time,&
            &  sum_lp_time,ID_PREC, codes, save_time , &
            & TIME, codesQ, IRHW, DX_rpe, DY_rpe, Exit_cond, EXP_NAME&
            & , iprint, num_of_bits, DP_Depth, Alp_REL)
@@ -5063,7 +5063,7 @@ double precision :: p(n1,n2)
 REAL(Kind=4) :: pfx(n1,n2),pfy(n1,n2),hx(n1,n2),hy(n1,n2),s(n1,n2), &
      &   b(n1,n2),pb(n1,n2),p0(n1,n2), S_full,                   &
      &   e1(n1,n2),e2(n1,n2),cor(n1,n2),d(n1,n2),q(n1,n2),r(n1,n2),ar(n1,n2), &
-     &    r_true(n1,n2), r0_true(n1,n2), p_true(n1,n2),r_HP(n1,n2), &
+     &   p_T(n1,n2), r_true(n1,n2), r0_true(n1,n2), p_true(n1,n2),r_HP(n1,n2), &
      &   p0_true(n1, n2), b_true(n1, n2), PMB(n1, n2), PMP0(n1, n2), qr(n1,n2)
 REAL(Kind=4) :: MGH1IHX(n2), MGH2IHY(n2), AC(n2), BC(n2), AD(n2), BD(n2), Alp_REL(n1,n2)
 !! preconditioning
@@ -5096,7 +5096,7 @@ LOGICAL :: codesQ, exiting
 INTEGER :: IRHW , counter
 
 double precision :: err0_dp, errn_dp, beta_dp, ax2_dp(lord), rax_dp, del_dp(lord), axaqu_dp(lord)
-double precision :: p_T(n1,n2),a11_dp(n1,n2),a12_dp(n1,n2),a21_dp(n1,n2), &
+double precision :: a11_dp(n1,n2),a12_dp(n1,n2),a21_dp(n1,n2), &
               &     a22_dp(n1,n2),b11_dp(n1,n2),b22_dp(n1,n2)
 double precision :: r_HP_dp(n1,n2), pfx_dp(n1,n2),pfy_dp(n1,n2), x_dp(n1,n2,lord),ax_dp(n1,n2,lord)
 double precision :: p_dp(n1,n2), p_T_dp(n1,n2), qu_dp(n1,n2),aqu_dp(n1,n2), r0_HP_dp(n1,n2)
@@ -5106,9 +5106,15 @@ double precision :: err_true_dp, err0_true_dp,r_true_dp(n1,n2), r0_true_dp(n1,n2
 double precision :: T_step_dp,r_dp(n1,n2),qr_dp(n1,n2), ar_dp(n1,n2),  A_c_dp(n1,n2), ps_dp(n1+1,n2), divi_dp(n1,n2)
 double precision :: PMB_dp(n1,n2), PMP0_dp(n1, n2), p_true_dp(n1, n2),p0_true_dp(n1, n2), b_true_dp(n1, n2) 
 
+double precision :: r_map_dp(n1,n2), x_map_dp(n1,n2,lord),ax_map_dp(n1,n2,lord),&
+       &  qu_map_dp(n1,n2),aqu_map_dp(n1,n2), p_T_map_dp(n1,n2)
 double precision, external :: norm 
+integer :: DP_Depth_sp
 
+DP_Depth_sp=3
 p_T(:,:)=0.0d0
+p_T_map_dp(:,:)=0.0d0
+p_T_dp(:,:)=0.0d0
 ps(:,:)=0.0d0
 divi(:,:)=0.0d0
 ps_dp(:,:)=0.0d0
@@ -5136,13 +5142,13 @@ p_T_dp(:,:)=0.0d0
 
  DO J=1,n2
    DO I=1,n1
-    PMB(I, J)=b(I,J)
+    PMB(I, J)= p(I,J)-b(I,J)
     PMP0(I,J)= p(I,J)-p0(I,J)
    enddo
  enddo
  DO J=1,n2
    DO I=1,n1
-    PMB_dp(I, J)=b(I,J)
+    PMB_dp(I, J)= p_dp(I,J)-b(I,J)
     PMP0_dp(I,J)= p_dp(I,J)-p0(I,J)
    enddo
  enddo
@@ -5252,21 +5258,27 @@ call cpu_time(startLP)
 err0=rpe_0
  DO J=1,n2
    DO I=1,n1
-     r_HP(I,J)=rpe_05*r_HP(I,J)-(b(I,J))
+     r_HP(I,J)=rpe_05*r_HP(I,J)- b(I,J)  !(p(I,J)-b(I,J))
    enddo
  enddo
 
 !if(comp_with_dp) then
  DO J=1,n2
    DO I=1,n1
-     r_HP_dp(I,J)=0.5d0*r_HP_dp(I,J)-(dble(b(I,J)))
+     r_HP_dp(I,J)=0.5d0*r_HP_dp(I,J)-b(I,J)!(p_dp(I,J)-dble(b(I,J)))
    enddo
  enddo
 r_HP(:,:)=r_HP_dp(:,:)
+r_map_dp(:,:)=r_HP_dp(:,:)
   r0_HP_dp(:,:)=r_HP_dp(:,:)
 !        write(*,*) 'r0 full', norm(r_HP(:,:),r_HP_dp(:,:),n1,n2,1,n1,1,n2,2), &
 !                  & norm(r_HP(:,:),r_HP_dp(:,:),n1,n2,1,n1,1,n2,1) 
 
+      DO J=DP_Depth_sp+1, n2+(1-DP_Depth_sp)-1
+        DO I=1,n1
+      r_map_dp(I,J)=r_HP(I,J)
+        enddo
+      enddo
 !  endif
 
  err0=0.0
@@ -5276,6 +5288,13 @@ r_HP(:,:)=r_HP_dp(:,:)
    enddo
  enddo
 
+ err0_dp=0.0
+ DO J=1,n2
+   DO I=2,n1-1
+      err0_dp=err0_dp+dble(b(I,J))*dble(b(I,J))
+   enddo
+ enddo
+ write(*,*) 'p_dp', sqrt(err0_dp)
  err0_dp=0.0
  DO J=1,n2
    DO I=2,n1-1
@@ -5310,6 +5329,15 @@ call cpu_time(startLP)
 call precon(r_HP,x(:,:,1),ax(:,:,1), T_step,  A_c, ps, divi,a11,a12,a21,a22,b11,b22,p0,  &
                 &   pfx,pfy,s,S_full,n1,n2,ip,ID_PREC, num_of_bits, DP_Depth)
 
+call precon_dp(r_map_dp,x_map_dp(:,:,1),ax_map_dp(:,:,1),dble( T_step),  A_c_dp, ps_dp, divi_dp&
+        & ,a11_dp,a12_dp,a21_dp,a22_dp,b11_dp,b22_dp,dble(p0),  &
+                &   pfx_dp,pfy_dp,dble(s),dble(S_full),n1,n2,ip,ID_PREC, num_of_bits, DP_Depth)
+
+      DO J=DP_Depth_sp+1, n2+(1-DP_Depth_sp)-1
+        DO I=1,n1
+      x_map_dp(I,J,1)=x(I,J,1)
+        enddo
+      enddo
 
 qrr0=rpe_0
  DO J=1,n2
@@ -5330,7 +5358,27 @@ endif
         enddo
       enddo
 
+  call lapl_depth_dp(x_map_dp(:,:,1),ax_map_dp(:,:,1), A11_dp,A12_dp,A21_dp,A22_dp,B11_dp,B22_dp,&
+           & dble(P0),pfx_dp,pfy_dp,dble(S),n1,n2,IP,num_of_bits,DP_Depth)
+     
+      DO J=1,n2
+        DO I=1,n1
+      ax_map_dp(I,J,1)=0.5d0*ax_map_dp(I,J,1)-x_map_dp(I,J,1)
+        enddo
+      enddo
 
+      DO J=1,DP_Depth_sp
+        DO I=1,n1
+      ax(I,J,1)=ax_map_dp(I,J,1)
+      x(I,J,1)=x_map_dp(I,J,1)
+        enddo
+      enddo
+      DO J=n2+(1-DP_Depth_sp),n2
+        DO I=1,n1
+      ax(I,J,1)=ax_map_dp(I,J,1)
+      x(I,J,1)=x_map_dp(I,J,1)
+        enddo
+      enddo
 call cpu_time(endLP)
 lowprectime=lowprectime + endLP-startLP
 
@@ -5368,10 +5416,37 @@ do it=1,itr
         DO I=1,n1
          p_T(I,J)=p_T(I,J) +beta* x(I,J,l) 
          ! p(I,J)=p(I,J) +beta* x(I,J,l)! done outside with p(:,:)+p_T(:,:) 
-         r_HP_dp(I,J)  =r_HP_dp(I,J)   +beta*ax(I,J,l) 
+         p_T_dp(I,J)=p_T_dp(I,J) +beta* x(I,J,l)
+         r_HP(I,J)  =r_HP(I,J)   +beta*ax(I,J,l) 
         enddo
       enddo
-r_HP(:,:)=r_HP_dp(:,:)
+      DO J=1,n2
+        DO I=1,n1
+         p_T_map_dp(I,J)=p_T_map_dp(I,J) +beta* x_map_dp(I,J,l)
+         r_map_dp(I,J)  =r_map_dp(I,J)   +beta*ax_map_dp(I,J,l) 
+        enddo
+      enddo
+!r_map_dp(:,:)=r_HP(:,:)
+
+      p_T_dp(:,:)=p_T(:,:)
+      DO J=1,DP_Depth_sp
+        DO I=1,n1
+      p_T_dp(I,J)=p_T_map_dp(I,J)
+      r_HP(I,J)=r_map_dp(I,J)
+        enddo
+      enddo
+      DO J=n2+(1-DP_Depth_sp),n2
+        DO I=1,n1
+      r_HP(I,J)=r_map_dp(I,J)
+      p_T_dp(I,J)=p_T_map_dp(I,J)
+        enddo
+      enddo
+      !! truncate r_HP for preconditioning
+      DO J=DP_Depth_sp+1, n2+(1-DP_Depth_sp)-1
+        DO I=1,n1
+      r_map_dp(I,J)=r_HP(I,J)
+        enddo
+      enddo
 !  IF(global_sum_fix) then
     errn      =global_sqsums(r_HP,r_HP,n1,n2,size_of_sum,2,N1-1,1,n2)
 !  endif
@@ -5380,14 +5455,14 @@ r_HP(:,:)=r_HP_dp(:,:)
 
 !!! begin true residual
 r_true_dp(:,:)=0.0d0
-  CALL PRFORC_ABS_dp(dble(p_true_dp(:,:))+dble(p_T(:,:)),pfx_dp,pfy_dp,dble(pb),dble(p0), &
+  CALL PRFORC_ABS_dp(dble(p_true_dp(:,:))+dble(p_T_dp(:,:)),pfx_dp,pfy_dp,dble(pb),dble(p0), &
        &      dble(E1(:,:)),dble(E2(:,:)),dble(HX),dble(HY),dble(COR), &
        &      n1,n2,IP,dble(GC1),dble(GC2),dble(Alp_REL),1,1)
   call diver_dp(r_true_dp,pfx_dp,pfy_dp,dble(hx),dble(hy),dble(s),n1,n2,ip,-1)
 
 DO J=1,n2
   DO I=1,n1
-    r_true_dp(I,J)=0.5d0*r_true_dp(I,J)-(dble(p_T(I,J))+dble(b(I,J)))
+    r_true_dp(I,J)=0.5d0*r_true_dp(I,J)-(dble(p_T_dp(I,J))+dble(b(I,J)))
  ! write(*,*), i, J, P(i,J)
   enddo
 enddo
@@ -5434,8 +5509,35 @@ call precon(r_HP,qu, aqu , T_step,  A_c, ps, divi,a11,a12,a21,a22,b11,b22,p0,   
    !! end of rewrite
 
 
+call precon_dp(r_map_dp,qu_map_dp(:,:),aqu_map_dp(:,:),dble( T_step),  A_c_dp, ps_dp, divi_dp&
+        & ,a11_dp,a12_dp,a21_dp,a22_dp,b11_dp,b22_dp,dble(p0),  &
+                &   pfx_dp,pfy_dp,dble(s),dble(S_full),n1,n2,ip,ID_PREC, num_of_bits, DP_Depth)
 
+      DO J=DP_Depth_sp+1, n2+(1-DP_Depth_sp)-1
+        DO I=1,n1
+      qu_map_dp(I,J)=qu(I,J)
+        enddo
+      enddo
+  call lapl_depth_dp(qu_map_dp(:,:),aqu_map_dp(:,:), A11_dp,A12_dp,A21_dp,A22_dp,B11_dp,B22_dp,&
+           & dble(P0),pfx_dp,pfy_dp,dble(S),n1,n2,IP,num_of_bits,DP_Depth)
+      DO J=1,n2
+        DO I=1,n1
+      aqu_map_dp(I,J)=0.5d0*aqu_map_dp(I,J)-qu_map_dp(I,J)
+        enddo
+      enddo
 
+      DO J=1,DP_Depth_sp
+        DO I=1,n1
+      aqu(I,J)=aqu_map_dp(I,J)
+      qu(I,J)=qu_map_dp(I,J)
+        enddo
+      enddo
+      DO J=n2+(1-DP_Depth_sp),n2
+        DO I=1,n1
+      aqu(I,J)=aqu_map_dp(I,J)
+      qu(I,J)=qu_map_dp(I,J)
+        enddo
+      enddo
 
     do ll=1,l
     axaqu(ll)  =global_sqsums(ax(:,:,ll),aqu(:,:),n1,n2,size_of_sum,2,N1-1,1,n2)
@@ -5463,7 +5565,25 @@ call precon(r_HP,qu, aqu , T_step,  A_c, ps, divi,a11,a12,a21,a22,b11,b22,p0,   
       enddo
 
       enddo
+   !!  double precision
+      DO J=1,n2
+        DO I=1,n1
+          x_map_dp(I,J,l+1)= qu_map_dp(I,J)
+          ax_map_dp(I,J,l+1)=aqu_map_dp(I,J)
+        enddo
+      enddo
 
+      do ll=1,l
+
+ !! should be 23   
+      DO J=1,n2
+        DO I=1,n1
+            x_map_dp(I,J,l+1)= x_map_dp(I,J,l+1)+del(ll)* x_map_dp(I,J,ll)
+            ax_map_dp(I,J,l+1)=ax_map_dp(I,J,l+1)+del(ll)*ax_map_dp(I,J,ll)
+        enddo
+      enddo
+
+      enddo
     else
   !! rewritten to change precision at poles as desired 
  !! should be 23   
@@ -5489,6 +5609,27 @@ call precon(r_HP,qu, aqu , T_step,  A_c, ps, divi,a11,a12,a21,a22,b11,b22,p0,   
 
       enddo
 
+      DO J=1,n2
+        DO I=1,n1
+          x_map_dp(I,J,1)= qu_map_dp(I,J)+del(1)* x_map_dp(I,J,1)
+          ax_map_dp(I,J,1)=aqu_map_dp(I,J)+del(1)*ax_map_dp(I,J,1)
+        enddo
+      enddo
+   !! end of rewrite
+
+      do ll=2,l
+
+ !! should be 23   
+      DO J=1,n2
+        DO I=1,n1
+            x_map_dp(I,J,1 )= x_map_dp(I,J,1)+del(ll)* x_map_dp(I,J,ll)
+            x_map_dp(I,J,ll)=rpe_0
+            ax_map_dp(I,J,1 )=ax_map_dp(I,J,1)+del(ll)*ax_map_dp(I,J,ll)
+            ax_map_dp(I,J,ll)=rpe_0
+        enddo
+      enddo
+
+      enddo
     endif
 
 
@@ -6054,7 +6195,7 @@ r_true_dp(:,:)=0.0d0
 
 DO J=1,n2
   DO I=1,n1
-    r_true_dp(I,J)=0.5d0*r_true_dp(I,J)-(dble(p_T(I,J))+dble(b(I,J)))
+    r_true_dp(I,J)=0.5d0*r_true_dp(I,J)-(dble(p_T(I,J))+dble(b_true(I,J)))
  ! write(*,*), i, J, P(i,J)
   enddo
 enddo
@@ -9201,7 +9342,7 @@ endif
 err0=rpe_0
  DO J=1,n2
    DO I=1,n1
-     r_HP(I,J)=rpe_05*r_HP(I,J)-(b(I,J))
+     r_HP(I,J)=0.5d0*r_HP(I,J)-(p(I,J)-b(I,J))
    enddo
  enddo
 
@@ -9209,10 +9350,17 @@ err0=rpe_0
  err0=0.0
  DO J=1,n2
    DO I=2,n1-1
+      err0=err0+b(I,J)*b(I,J)
+   enddo
+ enddo
+  write(*,*) 'dp p', sqrt(err0)
+ err0=0.0
+ DO J=1,n2
+   DO I=2,n1-1
       err0=err0+r_HP(I,J)*r_HP(I,J)
    enddo
  enddo
-  write(*,*) 'dp err0', sqrt(err0/((n1-2)*n2))
+  write(*,*) 'dp err0', sqrt(err0)
 if (iprint==1) then
     call write_L2r0(sqrt(err0/((n1-2)*n2)),0.0d0, TIME, &
             &  codesQ, codes, IRHW, num_of_bits, 8 ,EXP_NAME)
@@ -9298,7 +9446,7 @@ r_true_dp(:,:)=0.0d0
 
 DO J=1,n2
   DO I=1,n1
-    r_true_dp(I,J)=0.5d0*r_true_dp(I,J)-(dble(p_T(I,J))+dble(b_true(I,J)))
+    r_true_dp(I,J)=0.5d0*r_true_dp(I,J)-(dble(p_true(I,J))+dble(p_T(I,J))-dble(b_true(I,J)))
  ! write(*,*), i, J, P(i,J)
   enddo
 enddo
