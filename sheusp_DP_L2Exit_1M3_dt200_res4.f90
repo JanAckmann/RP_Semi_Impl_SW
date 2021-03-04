@@ -209,7 +209,7 @@ stencil=0
 
 
 do ID_PREC=7,7,-5
- do IRHW = 1,3,2
+ do IRHW = 3,3,2
 
   do DP_Depth=0,0,2
    write(Dp_depth_str,*) DP_Depth
@@ -273,7 +273,7 @@ KMX=4
 mpfl=999999
 elseif(IRHW==1) then
 NT = 6480 !  6376 !int(6376*(200.0/240.0)) !12960  
-NPRINT =216 !797 !797 !int(797*(200.0/240.0)) !864 !DATA NT,NPRINT/12096,864/
+NPRINT =6490 !216 !797 !797 !int(797*(200.0/240.0)) !864 !DATA NT,NPRINT/12096,864/
 !NT = 6376 !int(6376*(200.0/240.0)) !12960  
 !NPRINT =200 !797 !797 !int(797*(200.0/240.0)) !864
 DT_23=200.0d0
@@ -282,7 +282,7 @@ atau=200.*DT_23 ! RHW4
 mpfl=999999
 elseif(IRHW==3) then
 NT =  6480 ! 6376 !int(6376*(200.0/240.0)) !12960  
-NPRINT =216  !797 !797 !int(797*(200.0/240.0)) !864 !DATA NT,NPRINT/12096,864/
+NPRINT = 6490!216  !797 !797 !int(797*(200.0/240.0)) !864 !DATA NT,NPRINT/12096,864/
 !NT = 6376 !int(6376*(200.0/240.0)) !12960  
 !NPRINT = 200 !797 !797 !797 !int(797*(200.0/240.0)) !864
 DT_23=200.0d0
@@ -497,6 +497,10 @@ elseif (IRHW.EQ.3)then
 else
   P0_HP(:,:)=0.0
 endif
+    call write_residual(P0_HP,0.0d0, 0, 0.0d0, codesignQ, codesignD, IRHW, X, Y,&
+                     & N, M, num_of_bits, 33 ,EXP_NAME)
+
+
 IF(IRHW.EQ.0) CALL INITZON(U_23,V_23,PT_HP,COR_23,X_23,Y_23,N,M,F0_23,BETA_23,H00_23,R_23,PVEL_23)
 IF(IRHW.EQ.1) CALL INITRHW(U_23,V_23,PT_HP,COR_23,X_23,Y_23,N,M,F0_23,R_23)
 IF(IRHW.EQ.2) CALL INITZON(U_23,V_23,PT_HP,COR_23,X_23,Y_23,N,M,F0_23,BETA_23,H00_23,R_23,PVEL_23)

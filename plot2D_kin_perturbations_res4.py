@@ -38,7 +38,8 @@ path=  'data_ADI_Precon/'
 #pathlist= ['../data/sheusp_DP_L2Exit_1M3_dt200_res4/'] # '../data/data_ADI_NOTgcr_D6_2M4_RP_res4/'
 #pathlist= ['../data/sheusp_SP_L2Exit_1M3_dt200_res4/'] # '../data/data_ADI_NOTgcr_D6_2M4_RP_res4/'
 #pathlist= ['../data/sheusp_SP_1iteration_L2Exit_1M3_dt200_res4/'] # '../data/data_ADI_NOTgcr_D6_2M4_RP_res4/'
-pathlist= ['../data/sheusp_IMPR_SP_L2Exit_1M3_dt200_res4/'] # '../data/data_ADI_NOTgcr_D6_2M4_RP_res4/'
+#pathlist= ['../data/sheusp_IMPR_SP_L2Exit_1M3_dt200_res4/'] # '../data/data_ADI_NOTgcr_D6_2M4_RP_res4/'
+pathlist= ['../data/sheusp_IMPR_SP_FRPPreAll_FRPLap_SPr0V2_RPxAx_DP3_L2Exit_1M3_dt200_res4/'] # '../data/data_ADI_NOTgcr_D6_2M4_RP_res4/'
 path_ref='../data/sheusp_DP_L2Exit_1M3_dt200_res4/'
 codesQ='T'
 codesD='T'
@@ -208,7 +209,7 @@ for path in pathlist:
               interpolation='nearest', cmap=cm.jet)
     clb=plt.colorbar(shrink=0.7)
     clb.set_label(r'$\frac{m}{s}$',fontsize=18, rotation=0)
-    plt.savefig('kinetic'+str(exp)+'_mp.png')
+    plt.savefig('kinetic'+str(exp)+'_rp.png')
     plt.close()
 
     
@@ -268,6 +269,6 @@ for path in pathlist:
               interpolation='nearest', norm=matplotlib.colors.LogNorm(),  cmap=cm.jet)
     clb=plt.colorbar(shrink=0.7)
     clb.set_label(r'$\frac{m}{s}$',fontsize=18, rotation=0)
-    plt.savefig('kinetic_diff'+str(exp)+'_mp.png')
+    plt.savefig('kinetic_diff'+str(exp)+'_rp.png')
     plt.close()
 

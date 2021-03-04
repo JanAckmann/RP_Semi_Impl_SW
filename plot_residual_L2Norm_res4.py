@@ -19,7 +19,8 @@ from matplotlib.ticker import MaxNLocator
 #path='../data/sheusp_IMPR_SP_RPGCR_Prec_DP16_L2Exit_1M3_dt200_res4/'
 #path='../data/sheusp_IMPR_SP_RPPreAll_RPLap_FullSPr0_DP0_L2Exit_1M3_dt200_res4/'
 #path='../data/sheusp_IMPR_SP_FRPPreAll_FRPLap_SPr0_DP2_L2Exit_1M3_dt200_res4/' # no single precision left in precon
-path='../data/sheusp_IMPR_SP_FRPPreAll_FRPLap_SPr0V2_RPxAx_DP0_L2Exit_1M3_dt200_res4/' # + reduced precisision in conjugacy 
+path='../data/sheusp_IMPR_SP_FRPPreAll_FRPLap_SPr0V2_RPxAx_DP3_L2Exit_1M3_dt200_res4/' # + reduced precisision in conjugacy 
+#path='../data/sheusp_IMPR_SP_FRPPreAll_FRPLap_SPr0V2_DP4_L2Exit_1M3_dt200_res4/' # + reduced precisision in conjugacy 
 #path='../data/sheusp_IMPR_SP_plusLat_L2Exit_1M3_dt200_res4/'
 Precon='23'
 codesD='T'
@@ -120,7 +121,7 @@ for exp in explist:
         filenameT = path+'Precon'+Precon+'_' + var+'_exp'+exp+'_time'+str(time)+'_iter_'+str(iteration)+'_codes_'+str(codesD)+str(codesQ)+'_bits'+str(bits)+'.txt'
         #filenameT_re = path_ref+'Precon'+Precon+'_' + var+'_exp'+exp+'_time'+str(time)+'_iter_'+str(iteration)+'_codes_'+str(codesD)+str(codesQ)+'_bits'+str(bits)+'.txt'
         #print 'calc_average'
-        print(filenameT)
+        #print(filenameT)
 
         #xcoord, ycoord, mean_var= calc_average(filename, start_time, end_time, jump)
         #print 'done'
@@ -150,8 +151,8 @@ for exp in explist:
           #xcoord, ycoord, mean_varF     =np.loadtxt( filenameF, usecols=(0,1,2), unpack=True)
 
           residuum_norm[iteration]= np.sqrt(np.sum (Residuum**2)) #np.mean (np.abs(Residuum))#np.linalg.norm (Residuum)
-          print(residuum_norm[iteration])
-          residuum_infnorm[iteration]=np.mean (np.abs(Residuum)) #np.linalg.norm (Residuum , np.inf)
+          print(residuum_norm[iteration]/residuum_norm[0])
+          residuum_infnorm[iteration]=np.max (np.abs(Residuum)) #np.linalg.norm (Residuum , np.inf)
           #print(residuum_norm[iteration], np.sqrt(np.mean (Residuum_re**2)), (np.sqrt(np.mean (Residuum_re**2))-residuum_norm[iteration] )/residuum_norm[iteration])
           #exit[iteration]=np.linalg.norm (exitcon , np.inf)
           max_iteration=max(iteration,max_iteration)
@@ -160,7 +161,7 @@ for exp in explist:
           if(plotted== False ):
             number_of_iters=range(0,iteration,1)#np.zeros((iteration))
             #number_of_iters=(range[0,iteration,1])
-            print(residuum_infnorm[0:iteration], exit[0])
+            print(residuum_infnorm[0:iteration]/residuum_infnorm[0])
             
             plt.plot(number_of_iters, residuum_norm[0:iteration], color=colors[int((time-start_time)/jump)], label ='day'+str(1+int(time/24)))
             #plt.plot(number_of_iters, residuum_norm[0:iteration], label ='day'+str(int(time/24)) )

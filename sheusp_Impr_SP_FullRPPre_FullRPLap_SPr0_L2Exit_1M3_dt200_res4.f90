@@ -85,7 +85,7 @@ double precision :: PD_HP(N,M), &
                & VA_dp(N,M+1),  &
                & pd_t_dp(N,M), &        
                & QXS_dp(N,M), QYS_dp(N,M)
-double precision :: Alp_REL_dp(N,M)
+double precision :: Alp_REL_dp(N,M), nullfield(N,M)
           REAL(Kind=4) ::   UA_HP(N,M), &
                   & VA_HP(N,M)
                   
@@ -234,10 +234,11 @@ PT_pert_rp(:,:)%sbits=23
 PT_zmean_rp(:,:)%sbits=23
 PT_sum_rp(:,:)%sbits=52
 mountain = .false.
+nullfield(:,:)=1.0d0
  !!! RPE VARIABLES
-DP_Depth_ID(1)=4
-DP_Depth_ID(2)=2
-DP_Depth_ID(3)=0
+DP_Depth_ID(1)=2
+DP_Depth_ID(2)=4
+DP_Depth_ID(3)=3
 
 
   codesignQ = .true.
@@ -253,13 +254,13 @@ stencil=0
 
 
 do ID_PREC=7,7,-5
- do DP_Depth_nr=3,3,1
-  do IRHW = 1,3,2
+ do DP_Depth_nr=1,3,1
+  do IRHW = 3,1,-2
     DP_Depth=DP_Depth_ID(DP_Depth_nr)
    write(Dp_depth_str,*) DP_Depth
 
   !ID_PREC=0
-EXP_NAME= 'data/sheusp_IMPR_SP_FRPPreAll_FRPLap_SPr0_DP'//trim(adjustl(Dp_depth_str))//'_L2Exit_1M3_dt200_res4'
+EXP_NAME= 'data/sheusp_IMPR_SP_FRPPreAll_FRPLap_SPr0V2_DP'//trim(adjustl(Dp_depth_str))//'_L2Exit_1M3_dt200_res4'
   ! EXP_NAME= 'data_ADI_Precon_init23'
 
 
@@ -435,7 +436,7 @@ IF(IRST.EQ.0) THEN
       !end do        
       enddo
       
-      PT_mean_rp=PT_Mean_dp
+      PT_mean_rp=0.0d0 !PT_Mean_dp
       PT_mean10_rp=PT_Mean_dp
       
       DO J=1,M
@@ -941,7 +942,7 @@ call prepB_GCR(PD, PT,U(:,:,0), V(:,:,0),PC,P0,F1(:,:,:),  F2(:,:,:), E1(:,:,0),
    call codesign_PT(PT_HP, REAL(PD_T),N, M)
 
     if(mod(kt,100)==0) then
-
+      write(*,*) 'new PT_zmean_rp'
       DO J=1,M
        do I=1,N
 
@@ -967,7 +968,24 @@ call prepB_GCR(PD, PT,U(:,:,0), V(:,:,0),PC,P0,F1(:,:,:),  F2(:,:,:), E1(:,:,0),
         end do
       end do
       write(*,*) 'ERROR In PT', norm(PT_sum_rp(:,:),PT_HP(:,:),n,m,2,N-1,1,M,2)
-      write(*,*) 'ERROR In PT lat1', norm(PT_sum_rp(:,:),PT_HP(:,:),n,m,2,N-1,1,1,2)
+      PT_sum_rp=0.0d0
+      DO J=1,M
+        DO I=1,N
+            PT_sum_rp(1,1)= PT_sum_rp(1,1) + abs( PT_zmean_rp(I,J)%val)
+
+        end do
+      end do
+
+      write(*,*) 'size of PT_zmean_rp', PT_sum_rp(1,1)/(M*N)
+      PT_sum_rp=0.0d0
+      DO J=1,M
+        DO I=1,N
+            PT_sum_rp(1,1)= PT_sum_rp(1,1) + abs( PT_pert_rp(I,J)%val)
+
+        end do
+      end do
+      write(*,*) 'size of pt_pert_rp', PT_sum_rp(1,1)/(M*N)
+      
       DO J=1,M
         DO I=1,N
             PT_sum_rp(I,J)= dble( PT_mean10_rp%val) + dble( PT_zmean10_rp(I,J)%val) +dble(PT_pert10_rp(I,J)%val)
@@ -2689,7 +2707,6 @@ DO J=1,M
       DETI=1./(AMM**2+GMM**2)
       A=AMM*DETI
       B=GMM*DETI
-
       A11(I,J)=-C1*A*GH1*HY(I,J)*.5
       A12(I,J)=-C2*B*GH1*HY(I,J)*.5
       A22(I,J)= C1*B*GH2*HX(I,J)*.5
@@ -7675,6 +7692,7 @@ size_of_sum=128 !512
    b22_rp_Prec(:,1:DP_Depth_Prec)%sbits=23
    b22_rp_Prec(:,n2+(1-DP_Depth_Prec):n2)%sbits=23
 
+! preconditioner and calculation of L
    r_HP_rp_Prec(:,:)%sbits=10
    !r_HP_rp_Prec(:,:)%sbits=23
    r_HP_rp_Prec(:,1:DP_Depth_Prec)%sbits=23
@@ -7682,8 +7700,7 @@ size_of_sum=128 !512
    qu_HP_rp_Prec(:,:)%sbits=10
    qu_HP_rp_Prec(:,1:DP_Depth_Prec)%sbits=23
    qu_HP_rp_Prec(:,n2+(1-DP_Depth_Prec):n2)%sbits=23
-
-   aqu_HP_rp_Prec(:,:)%sbits=10
+   aqu_HP_rp_Prec(:,:)%sbits=23
    aqu_HP_rp_Prec(:,1:DP_Depth_Prec)%sbits=23
    aqu_HP_rp_Prec(:,n2+(1-DP_Depth_Prec):n2)%sbits=23
 
@@ -7702,15 +7719,47 @@ size_of_sum=128 !512
    pfy_rp_Prec(:,:)%sbits=10
    pfy_rp_Prec(:,1:DP_Depth_Prec)%sbits=23
    pfy_rp_Prec(:,n2+(1-DP_Depth_Prec):n2)%sbits=23
- 
+
+   s_rp(:,:)%sbits=23
+
    s_rp_Prec(:,:)%sbits=10
    !s_rp_Prec(:,:)%sbits=23
    s_rp_Prec(:,1:DP_Depth_Prec)%sbits=23
    s_rp_Prec(:,n2+(1-DP_Depth_Prec):n2)%sbits=23
 
    T_step_rp%sbits=23
-! initial residual calculation
+
+! conjugacy
+  
+   ax_rp(:,:,1)%sbits=23
+   ax_rp(:,:,2:)%sbits=23
+   ax_rp(:,1:DP_Depth_Prec,:)%sbits=23
+   ax_rp(:,n2+(1-DP_Depth_Prec):n2,:)%sbits=23
+
+   x_rp(:,:,:)%sbits=23
+   x_rp(:,1:DP_Depth_Prec,:)%sbits=23
+   x_rp(:,n2+(1-DP_Depth_Prec):n2,:)%sbits=23
+
+   ax_app_rp(:,:)%sbits=23
+   ax_app_rp(:,1:DP_Depth_Prec)%sbits=23
+   ax_app_rp(:,n2+(1-DP_Depth_Prec):n2)%sbits=23
+
+   x_app_rp(:,:)%sbits=23
+   x_app_rp(:,1:DP_Depth_Prec)%sbits=23
+   x_app_rp(:,n2+(1-DP_Depth_Prec):n2)%sbits=23
    
+   aqu_rp(:,:)%sbits=23
+   aqu_rp(:,1:DP_Depth_Prec)%sbits=23
+   aqu_rp(:,n2+(1-DP_Depth_Prec):n2)%sbits=23
+  
+   qu_rp(:,:)%sbits=23
+   qu_rp(:,1:DP_Depth_Prec)%sbits=23
+   qu_rp(:,n2+(1-DP_Depth_Prec):n2)%sbits=23
+
+
+! initial residual calculation
+   p_T_rp(:,:)%sbits=23
+
    p_mean_rp(:,1:DP_Depth_rpe)%sbits=52
    p_mean_rp(:,n2+(1-DP_Depth_rpe):n2)%sbits=52
    
@@ -7965,6 +8014,10 @@ RPE_DEFAULT_SBITS =23 !52
            & T_step_rp,  A_c_rp, ps_rp, divi_rp,c11_rp_Prec,a11_rp_Prec&
          & ,a12_rp_Prec,a21_rp_Prec,a22_rp_Prec,b11_rp_Prec,b22_rp_Prec,p0_rp,  &
                 &   pfx_rp_Prec,pfy_rp_Prec,s_rp_Prec,S_full_rp,n1,n2,ip,ID_PREC, 10, DP_Depth_Prec)
+!   call precon_rp(r_HP_rp_Prec,qu_HP_rp_Prec(:,:),ax_rp(:,:,1), &
+!           & T_step_rp,  A_c_rp, ps_rp, divi_rp,c11_rp_Prec,a11_rp_Prec&
+!         & ,a12_rp_Prec,a21_rp_Prec,a22_rp_Prec,b11_rp_Prec,b22_rp_Prec,p0_rp,  &
+!                &   pfx_rp_Prec,pfy_rp_Prec,s_rp,S_full_rp,n1,n2,ip,ID_PREC, 10, DP_Depth_Prec)
    RPE_DEFAULT_SBITS =23 !52
    x_rp(:,:,1)=qu_HP_rp_Prec(:,:)
 
@@ -7981,8 +8034,13 @@ RPE_DEFAULT_SBITS =23 !52
    call lapl_depth_rp(qu_HP_rp_Prec(:,:),aqu_HP_rp_Prec(:,:),&
           &  A11_rp_PREC,A12_rp_PREC,A21_rp_PREC,A22_rp_PREC,B11_rp_PREC,B22_rp_PREC &
           & ,P0_rp,pfx_rp_PREC,pfy_rp_PREC,s_rp_PREC,n1,n2,IP , num_of_bits,DP_Depth)
-ax_rp(:,:,1)=aqu_HP_rp_Prec(:,:)
-  DO J=1,n2
+
+! use single precision s
+!call lapl_depth_rp(qu_HP_rp_Prec(:,:),aqu_HP_rp_Prec(:,:),&
+!          &  A11_rp_PREC,A12_rp_PREC,A21_rp_PREC,A22_rp_PREC,B11_rp_PREC,B22_rp_PREC &
+!          & ,P0_rp,pfx_rp_Prec,pfy_rp_Prec,s_rp,n1,n2,IP , num_of_bits,DP_Depth)
+   ax_rp(:,:,1)=aqu_HP_rp_Prec(:,:)
+   DO J=1,n2
      DO I=1,n1
        ax_rp(I,J,1)=rpe_05*ax_rp(I,J,1)-x_rp(I,J,1)
      enddo
@@ -8143,6 +8201,10 @@ do it=1,itr
            & T_step_rp,  A_c_rp, ps_rp, divi_rp,c11_rp_Prec,a11_rp_Prec&
          & ,a12_rp_Prec,a21_rp_Prec,a22_rp_Prec,b11_rp_Prec,b22_rp_Prec,p0_rp,  &
                 &   pfx_rp_Prec,pfy_rp_Prec,s_rp_Prec,S_full_rp,n1,n2,ip,ID_PREC, 10, DP_Depth_Prec)
+!   call precon_rp(r_HP_rp_Prec,qu_HP_rp_Prec(:,:),aqu_rp(:,:), &
+!           & T_step_rp,  A_c_rp, ps_rp, divi_rp,c11_rp_Prec,a11_rp_Prec&
+!         & ,a12_rp_Prec,a21_rp_Prec,a22_rp_Prec,b11_rp_Prec,b22_rp_Prec,p0_rp,  &
+!                &   pfx_rp_Prec,pfy_rp_Prec,s_rp,S_full_rp,n1,n2,ip,ID_PREC, 10, DP_Depth_Prec)
    RPE_DEFAULT_SBITS =23 !52
    qu_rp(:,:)=qu_HP_rp_Prec(:,:)
   ! double precision 
@@ -8158,7 +8220,11 @@ do it=1,itr
    call lapl_depth_rp(qu_HP_rp_Prec(:,:),aqu_HP_rp_Prec(:,:),&
           &  A11_rp_PREC,A12_rp_PREC,A21_rp_PREC,A22_rp_PREC,B11_rp_PREC,B22_rp_PREC &
           & ,P0_rp,pfx_rp_PREC,pfy_rp_PREC,s_rp_PREC,n1,n2,IP , num_of_bits,DP_Depth)
-aqu_rp(:,:)=aqu_HP_rp_Prec(:,:)
+! use single precision s
+!call lapl_depth_rp(qu_HP_rp_Prec(:,:),aqu_HP_rp_Prec(:,:),&
+!          &  A11_rp_PREC,A12_rp_PREC,A21_rp_PREC,A22_rp_PREC,B11_rp_PREC,B22_rp_PREC &
+!          & ,P0_rp,pfx_rp_Prec,pfy_rp_Prec,s_rp,n1,n2,IP , num_of_bits,DP_Depth)
+   aqu_rp(:,:)=aqu_HP_rp_Prec(:,:)
    DO J=1,n2
      DO I=1,n1
        aqu_rp(I,J)=rpe_05*aqu_rp(I,J)-qu_rp(I,J)
@@ -10801,7 +10867,7 @@ INTEGER :: I, J, iteration, i2, il1, il2
 
 ! initialize precision
 
-   rhs(:,:)%sbits=num_of_bits
+   rhs(:,:)%sbits= num_of_bits
    rhs(:,1:DP_Depth)%sbits=23
    rhs(:,M+(1-DP_Depth):M)%sbits=23
 
@@ -10823,6 +10889,7 @@ INTEGER :: I, J, iteration, i2, il1, il2
    aa(M+(1-DP_Depth):M,1:4)%sbits=23
 
    Delta_t_I%sbits=23
+   
    !F_help%sbits=23
    F_help%sbits=num_of_bits
    util%sbits=num_of_bits

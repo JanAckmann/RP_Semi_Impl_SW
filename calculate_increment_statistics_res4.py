@@ -35,8 +35,8 @@ path=  'data_ADI_Precon/'
 
 #path_true='../data/data_ADI_LinfPhiEXIT1M10_Dp_refInst_dt200_res8/'
 #path_ref='../data/data_ADI_LinfPhiEXIT1M10_Dp_refInst_dt200_res4/'
-pathlist= ['../data/sheusp_DP_L2Exit_1M3_dt200_res4/'] # '../data/data_ADI_NOTgcr_D6_2M4_RP_res4/'
-#pathlist= ['../data/sheusp_SP_L2Exit_1M3_dt200_res4/'] # '../data/data_ADI_NOTgcr_D6_2M4_RP_res4/'
+#pathlist= ['../data/sheusp_DP_L2Exit_1M3_dt200_res4/'] # '../data/data_ADI_NOTgcr_D6_2M4_RP_res4/'
+pathlist= ['../data/sheusp_SP_L2Exit_1M3_dt200_res4/'] # '../data/data_ADI_NOTgcr_D6_2M4_RP_res4/'
 #pathlist= ['../data/sheusp_IMPR_SP_L2Exit_1M3_dt200_res4/'] # '../data/data_ADI_NOTgcr_D6_2M4_RP_res4/'
 
 codesQ='F'
@@ -62,7 +62,7 @@ codesD='F'
 varlist=['R']
 var='R'
 exp_list=['1', '3']
-Precon='2'
+Precon='1'
 iteration=4
 res=4
 # timestep 200 seconds
@@ -142,7 +142,7 @@ for path in pathlist:
     filename2 =path+'Precon'+str(Precon)+'_' + 'R_exp'+str(exp)+'_time'+str(time)+'_iter_'+str(iteration-1)+'_codes_'+codesQ+codesD+'_bits'+str(23)+'.txt'
     filename3 =path+'Precon'+str(Precon)+'_' + 'R_exp'+str(exp)+'_time'+str(time)+'_iter_'+str(iteration-2)+'_codes_'+codesQ+codesD+'_bits'+str(23)+'.txt'
     filename4 =path+'Precon'+str(Precon)+'_' + 'R_exp'+str(exp)+'_time'+str(time)+'_iter_'+str(iteration-3)+'_codes_'+codesQ+codesD+'_bits'+str(23)+'.txt'
-    filename5 =path+'Precon'+str(Precon)+'_' + 'R_exp'+str(exp)+'_time'+str(time)+'_iter_'+str(iteration-4)+'_codes_'+codesQ+codesD+'_bits'+str(23)+'.txt'
+    filename5 =path+'Precon'+str(Precon)+'_' + 'R_exp'+str(exp)+'_time'+str(time)+'_iter_'+str(iteration-3)+'_codes_'+codesQ+codesD+'_bits'+str(23)+'.txt'
     print(filename)  
     print(filename5)  
     xcoord, ycoord, R=np.loadtxt( filename, usecols=(0,1,2), unpack=True)

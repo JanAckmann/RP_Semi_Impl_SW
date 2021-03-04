@@ -236,8 +236,8 @@ PT_sum_rp(:,:)%sbits=52
 mountain = .false.
 nullfield(:,:)=1.0d0
  !!! RPE VARIABLES
-DP_Depth_ID(1)=4
-DP_Depth_ID(2)=3
+DP_Depth_ID(1)=3 !128
+DP_Depth_ID(2)=1
 DP_Depth_ID(3)=0
 
 
@@ -254,7 +254,7 @@ stencil=0
 
 
 do ID_PREC=7,7,-5
- do DP_Depth_nr=1,2,1
+ do DP_Depth_nr=1,3,1
   do IRHW = 1,3,2
     DP_Depth=DP_Depth_ID(DP_Depth_nr)
    write(Dp_depth_str,*) DP_Depth

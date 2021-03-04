@@ -43,7 +43,7 @@ c     DATA DT,NT,NPRINT/200,6480,432/  !flow over the pole
       DATA IPRINT,IPLOT,KT0/0,0,0/
 
 CONTROL TESTS: ZONAL FLOW OR ROSSBY WAVE
-      PARAMETER(IRHW=1)
+      PARAMETER(IRHW=0)
 CONTROL EVALUATION OF THE PRESSURE GRADIENTS: IPS=0 CENTERED DIFFERNCING
 CHOOSING IPS=1 GIVES WEIGHTED AVERAGE OF ONE-SIDED DERIVATIVES THAT
 CONVERGES TO ONE SIDED DERIVATIVE AT THE CROSSECTION WITH THE BOTTOM
@@ -173,10 +173,10 @@ C STORE INITIAL FIELDS AND NORMS FOR LATER NORMALISATION
        PTTRLI = AMAX1(PTTRLI,PT0(I,1))
        PDTRL2 = PDTRL2 + S(I,1)*PD0(I,1)**2
        PDTRLI = AMAX1(PDTRLI,PD0(I,1))
-       VLTRL2 = VLTRL2 + S(I,1)*(U0(I,1)**2+V0(I,1))**2
+       VLTRL2 = VLTRL2 + S(I,1)*(U0(I,1)**2+V0(I,1)**2)**2
        VLTRLI = AMAX1(VLTRLI, U0(I,1)**2+V0(I,1)**2)
       ENDDO
-
+      write(*,*) PTTRL2, PTTRLI, VLTRL2, VLTRLI
          IF(IRST.EQ.0) THEN
 C INITIATE CORRESPONDING FORCES
       CALL PRFC0(PT,F1(1,1,0),F2(1,1,0),PD,HX,HY,IP,IPS,GH1,GH2,EP,N,M)
@@ -425,7 +425,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccc
       do 1 ii=2,n-1
       read(33,*) i,j,flon,flat,tp0(i,j)
 !     print*, i,j,flon,flat,tp0(i,j)
-      h0(i,j)=tp0(i,j)
+      h0(i+1,j)=tp0(i,j)
     1 continue
       call xbc(h0,n,m)
       h0mx=-1.e15
@@ -600,7 +600,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccc
        PTTRLI = AMAX1(PTTRLI,PT0(I,J))
        PDTRL2 = PDTRL2 + S(I,J)*PD0(I,J)**2
        PDTRLI = AMAX1(PDTRLI,PD0(I,J))
-       VLTRL2 = VLTRL2 + S(I,J)*(U0(I,J)**2+V0(I,J))**2
+       VLTRL2 = VLTRL2 + S(I,J)*(U0(I,J)**2+V0(I,J)**2)**2
        VLTRLI = AMAX1(VLTRLI, U0(I,J)**2+V0(I,J)**2)
       ENDDO
       ENDDO
@@ -858,7 +858,7 @@ c      err0=amax1(err0,abs(r(k,1)))
          enddo
 c       error=errn/err0
         errn=sqrt(errn)
-       write(*,*) it, l, errn, err0
+       !write(*,*) it, l, errn, err0
        if(errn.lt.eps*err0.and.it .gt. itmn) go to 200
        if(errn.ge.errnm1) go to 200
         errnm1=errn
@@ -1029,7 +1029,7 @@ c        write(*,*) 'betap', betap
       endif
 
       beti=1./betap !*(1-line)
-      write(*,*) 'beti', beti
+      !write(*,*) 'beti', beti
 
       IF(IFLG.EQ.2) THEN
        betap=0.5
@@ -1807,8 +1807,8 @@ c     IM=I-K+(N-(I-K))/N*(N-2)
       abswidth=pi/64.*3   !RHW4
 !     atau=2.*(9.*2.*DT)
 !     atau=(2.*DT) ! RHW4
-      atau=200.*DT ! RHW4
-!     atau=2.*DT    !Zonal flow past Earth orography
+!     atau=200.*DT ! RHW4
+      atau=2.*DT    !Zonal flow past Earth orography
       alpha=1./atau
 
       ymax = 0.5*pi
@@ -2399,10 +2399,12 @@ CHECK COURANT NUMBERS
         PDERL2 = PDERL2 + S(I,1)*(PD(I,1)-PD0(I,1))**2
         PDERLI = AMAX1(PDERLI, ABS(PD(I,1)-PD0(I,1)))
         VLERL2 =VLERL2 + S(I,1)*( (U(I,1)-U0(I,1))**2
-     &                           +(V(I,1)-V0(I,1))**2 )
+     &                           +(V(I,1)-V0(I,1))**2 )**2
         VLERLI =AMAX1(VLERLI, (U(I,1)-U0(I,1))**2
      &                       +(V(I,1)-V0(I,1))**2 )
       ENDDO
+      write(*,*) PTERL2, PTERLI, VLERL2, VLERLI
+      write(*,*) PTTRL2, PTTRLI, VLTRL2, VLTRLI
       PTERL2 = SQRT(PTERL2/PTTRL2)
       PTERLI = PTERLI/PTTRLI
       PDERL2 = SQRT(PDERL2/PDTRL2)

@@ -778,14 +778,14 @@ IF(IANAL.EQ.0) THEN
     !          & ISOR,NONOS,IDIV,-1, IP,liner, dble(QX_T), .false.)
     !  CALL MPDATT_dp(UA_dp,VA_dp,QY_HP,S_dp,N,M,IORD,&
     !          & ISOR,NONOS,IDIV,-1, IP,liner, dble(QY_T), .false.)
-    IF (codesignQ) then
-       DO J=1,M
-        DO I=1,N
-            QX(I,J)= QX_HP(I,J)
-            QY(I,J)= QY_HP(I,J)
-        end do
-      end do
-    endif
+   ! IF (codesignQ) then
+   !    DO J=1,M
+   !     DO I=1,N
+   !         QX(I,J)= QX_HP(I,J)
+   !         QY(I,J)= QY_HP(I,J)
+   !     end do
+   !   end do
+   ! endif
           
 
    IF(QRelax) then !! define reference values for polar absorbers
@@ -909,11 +909,11 @@ call prepB_GCR(PD, PT,U(:,:,0), V(:,:,0),PC,P0,F1(:,:,:),  F2(:,:,:), E1(:,:,0),
 
        
               !!! update PD, because PRFORC needs an intermediate value of PD
-  DO J=1,M
-    DO I=1,N
-      PD(I,J)= max(EP, PT(I,J)*GI-P0(I,J))
-    end do
-  end do
+  !DO J=1,M
+  !  DO I=1,N
+  !    PD(I,J)= max(EP, PT(I,J)*GI-P0(I,J))
+  !  end do
+  !end do
   
   call codesign_PD(PD_HP, PT_HP, GI_dp, P0_HP, dble(EP), N, M)  
   if(codesignD) then
@@ -6505,7 +6505,7 @@ call precon_ADI(R,QU , T_step, A, ps, divi, A11,A12,A21,A22,B11,B22,P0,U,V,S,S_f
  
   ! write(*,*) 'AQU complete'
 elseif (ID_PREC==6) then
-call precon_Jac(R,QU , S_full, A, ps, divi, A11,A12,A21,A22,B11,B22,P0,U,V,S,N,M,IP,ID_PREC, num_of_bits,DP_Depth)
+!call precon_Jac(R,QU , S_full, A, ps, divi, A11,A12,A21,A22,B11,B22,P0,U,V,S,N,M,IP,ID_PREC, num_of_bits,DP_Depth)
 elseIF (ID_PREC==7) then !! ADI type preconditioner
 
 
@@ -7847,60 +7847,60 @@ double precision ::  r11,r12,r13,r21,r22,r23,r31,r32,r33, det3_dp
 end function det3_dp
 
 
-SUBROUTINE precon_Jac(R,QU , T_step,  A, ps, divi,A11,A12,A21,A22,B11,B22,P0,U,V,S,N,M,IP,ID_PREC, num_of_bits,DP_Depth)
-use implicit_functions_SP
-
-
-implicit none
-
-REAL(Kind=4) ::  R(N,M),QU(N,M),A11(N,M),A12(N,M),A21(N,M),A22(N,M),  &
-    &      B11(N,M),B22(N,M),P0(N,M),U(N,M),V(N,M),S(N,M)
-INTEGER :: IP(N), ID_PREC, num_of_bits,DP_Depth
-INTEGER :: N, M
-
-REAL(Kind=4) ::   ps(N+1,M), A(N,M), divi(N,M), rhs(N,M)
-
-REAL(Kind=4) :: T_step, swc, betap
-!REAL(Kind=4) :: 
-
-INTEGER :: I, J, it, itr, line
-
-itr = 0
-line= 0
-swc = 1.0d0
-
-
-betap=2.0d0/3.0d0
-
-do j=1,M
-  do i=1,N
-    QU(i,j)=-betap*R(i,j)/A(i,j)
-    rhs(i,j)=0.
-  enddo
-enddo
-
-call adjust_conservation(QU,s,T_step,n,m)
- ! write(*,*) 'linop in'
-!call linop(QU,rhs,a11,a12,a21,a22,b11,b22,A,s,ip,swc,n,m)
-  !write(*,*) 'linop out'
-
-do it=1,itr
-  !write(*,*) 'iteration', it
-  do j=1,M
-    do i=1,N
-      QU(i,j)=betap*(rhs(i,j)-R(i,j))/A(i,j) + (1.0d0-betap)*QU(i,j)
-    enddo
-  enddo
-  call adjust_conservation(QU,s,T_step,n,m)
-     do j=1,m
-      do i=1,n
-        write(*,*)  'QU',i, J, QU(i,j)
-        write(*,*)  'rhs',i, J, rhs(i,j)-R(i,j)
-       read(*,*)
-       enddo
-end do
-  if(it.lt.itr) call linop(QU,rhs,a11,a12,a21,a22,b11,b22,A,s,ip,swc,n,m)
-enddo
+!SUBROUTINE precon_Jac(R,QU , T_step,  A, ps, divi,A11,A12,A21,A22,B11,B22,P0,U,V,S,N,M,IP,ID_PREC, num_of_bits,DP_Depth)
+!use implicit_functions_SP
+!
+!
+!implicit none
+!
+!REAL(Kind=4) ::  R(N,M),QU(N,M),A11(N,M),A12(N,M),A21(N,M),A22(N,M),  &
+!    &      B11(N,M),B22(N,M),P0(N,M),U(N,M),V(N,M),S(N,M)
+!INTEGER :: IP(N), ID_PREC, num_of_bits,DP_Depth
+!INTEGER :: N, M
+!
+!REAL(Kind=4) ::   ps(N+1,M), A(N,M), divi(N,M), rhs(N,M)
+!
+!REAL(Kind=4) :: T_step, swc, betap
+!!REAL(Kind=4) :: 
+!
+!INTEGER :: I, J, it, itr, line
+!
+!itr = 0
+!line= 0
+!swc = 1.0d0
+!
+!
+!betap=2.0d0/3.0d0
+!
+!do j=1,M
+!  do i=1,N
+!    QU(i,j)=-betap*R(i,j)/A(i,j)
+!    rhs(i,j)=0.
+!  enddo
+!enddo
+!
+!call adjust_conservation(QU,s,T_step,n,m)
+! ! write(*,*) 'linop in'
+!!call linop(QU,rhs,a11,a12,a21,a22,b11,b22,A,s,ip,swc,n,m)
+!  !write(*,*) 'linop out'
+!
+!do it=1,itr
+!  !write(*,*) 'iteration', it
+!  do j=1,M
+!    do i=1,N
+!      QU(i,j)=betap*(rhs(i,j)-R(i,j))/A(i,j) + (1.0d0-betap)*QU(i,j)
+!    enddo
+!  enddo
+!  call adjust_conservation(QU,s,T_step,n,m)
+!     do j=1,m
+!      do i=1,n
+!        write(*,*)  'QU',i, J, QU(i,j)
+!        write(*,*)  'rhs',i, J, rhs(i,j)-R(i,j)
+!       read(*,*)
+!       enddo
+!end do
+!  if(it.lt.itr) call linop(QU,rhs,a11,a12,a21,a22,b11,b22,A,s,ip,swc,n,m)
+!enddo
 !     do j=1,m
 !      do i=1,n
 !        write(*,*)  'QU',i, J, QU(i,j)
@@ -7908,7 +7908,7 @@ enddo
 !       read(*,*)
 !       enddo
 !end do
-END SUBROUTINE
+!END SUBROUTINE
 
 !subroutine linop(p,r,a11,a12,a21,a22,b11,b22, &
 !     &               A,s,ip,swc,N,M)

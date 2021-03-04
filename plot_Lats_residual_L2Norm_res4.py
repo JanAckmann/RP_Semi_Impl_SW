@@ -16,7 +16,7 @@ from matplotlib.ticker import MaxNLocator
 #path='../data/sheusp_IMPR_SP_L2Exit_1M3_dt200_res4/'
 #path='../data/sheusp_IMPR_SP_L2Exit_1M3_dt200_res4/'
 #path='../data/sheusp_IMPR_SP_RPGCR_Prec_DP16_L2Exit_1M3_dt200_res4/'
-path='../data/sheusp_IMPR_SP_RPPreAll_RPLap_SPr0_DP2_L2Exit_1M3_dt200_res4/'
+path='../data/sheusp_IMPR_SP_FRPPreAll_FRPLap_SPr0V2_RPxAx_DP3_L2Exit_1M3_dt200_res4/'
 #path='../data/sheusp_IMPR_SP_plusLat_L2Exit_1M3_dt200_res4/'
 #path='../data/sheusp_DP_L2Exit_1M3_dt200_res4/'
 #path='../data/sheusp_DP_L2Exit_1M3_dt200_res4/'
@@ -35,7 +35,7 @@ explist=['1' , '3']
 if (path=='../data/sheusp_IMPR_SP_L2Exit_1M3_dt200_res4/' or path=='../data/sheusp_IMPR_SP_plusLat_L2Exit_1M3_dt200_res4/' ):
   Precon='9'
   codesD='T'
-elif (path=='../data/sheusp_IMPR_SP_RPPreAll_RPLap_SPr0_DP2_L2Exit_1M3_dt200_res4/' ):
+elif (path=='../data/sheusp_IMPR_SP_FRPPreAll_FRPLap_SPr0V2_RPxAx_DP3_L2Exit_1M3_dt200_res4/' ):
   Precon='23'
   codesD='T'
 else:
@@ -44,7 +44,7 @@ else:
 
 codesQ='F'
 
-iteration=4
+iteration=0
 solver='implicit_HP_implPD'
 
 start_time= 0
