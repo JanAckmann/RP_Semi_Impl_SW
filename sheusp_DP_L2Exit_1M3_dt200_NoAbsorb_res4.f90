@@ -215,7 +215,7 @@ do ID_PREC=7,7,-5
    write(Dp_depth_str,*) DP_Depth
 
   !ID_PREC=0
-   EXP_NAME= 'data/sheusp_DP_L2Exit_1M3_dt200_res4'
+   EXP_NAME= 'data/sheusp_DP_L2Exit_1M3_dt200_NoAbsorb_res4'
   ! EXP_NAME= 'data_ADI_Precon_init23'
 
 
@@ -5409,13 +5409,13 @@ eps=1.e-10
 pi=acos(-1.)
 abswidth=pi/64.*3   !RHW4
 !     atau=2.*(9.*2.*DT)
-if (IRHW==1) then
-      atau=200.*DT ! RHW4
-elseif (IRHW==3) then
-     atau=2.*DT    !Zonal flow past Earth orography
-endif
+!if (IRHW==1) then
+!      atau=200.*DT ! RHW4
+!elseif (IRHW==3) then
+!     atau=2.*DT    !Zonal flow past Earth orography
+!endif
 
-alpha=1./atau
+alpha=0.0d0 !1./atau
 
 ymax = 0.5*pi
 ymin =-0.5*pi

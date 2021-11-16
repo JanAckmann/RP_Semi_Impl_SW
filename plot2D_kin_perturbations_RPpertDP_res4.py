@@ -259,7 +259,10 @@ for path in pathlist:
     ycoord[:]=ycoord[:]/np.pi
     kinetic_ref=abs(kinetic-np.sqrt(kinetic_ref))
     kinetic_gen_ref=abs(kinetic_ref-np.sqrt(kinetic_gen_ref))
-    maximum=100#(max2D(kinetic_ref, ncols, nrows)) #, max2D(kinetic_gen, ncols, nrows))
+    if (str(exp)=='3'):
+        maximum=100#(max2D(kinetic_ref, ncols, nrows)) #, max2D(kinetic_gen, ncols, nrows))
+    else:
+        maximum=1
     plt.xlabel('x/Pi', fontsize=15)
     plt.ylabel('y/Pi', fontsize=15)
 

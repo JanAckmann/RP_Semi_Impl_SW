@@ -35,7 +35,7 @@ path=  'data_ADI_Precon/'
 
 #path_true='../data/data_ADI_LinfPhiEXIT1M10_Dp_refInst_dt200_res8/'
 #path_ref='../data/data_ADI_LinfPhiEXIT1M10_Dp_refInst_dt200_res4/'
-pathlist= ['../data_RP_Semi_Impl_SW/sheusp_DP_L2Exit_1M3_dt200_res4/'] # '../data/data_ADI_NOTgcr_D6_2M4_RP_res4/'
+pathlist= ['../data_RP_Semi_Impl_SW/sheusp_IMPR_SP_V2_ARMExpo5_RPMP_RPAdv_FRPPreAll_FRPLap_SPr0V2_RPxAx_DP128_L2Exit_1M3_dt200_res4/'] # '../data/data_ADI_NOTgcr_D6_2M4_RP_res4/'
 #pathlist= ['../data/sheusp_IMPR_SP_L2Exit_1M3_dt200_res4_speed/'] # '../data/data_ADI_NOTgcr_D6_2M4_RP_res4/'
 
 
@@ -59,8 +59,8 @@ pathlist= ['../data_RP_Semi_Impl_SW/sheusp_DP_L2Exit_1M3_dt200_res4/'] # '../dat
 varlist=['H']
 var='H'
 exp='3'
-codesQ='F'
-codesD='F'
+codesQ='T'
+codesD='T'
 
 res=4
 # timestep 200 seconds

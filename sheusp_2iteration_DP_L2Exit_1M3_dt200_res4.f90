@@ -215,7 +215,7 @@ do ID_PREC=7,7,-5
    write(Dp_depth_str,*) DP_Depth
 
   !ID_PREC=0
-   EXP_NAME= 'data/sheusp_DP_L2Exit_1M3_dt200_res4'
+   EXP_NAME= 'data/sheusp_2iteration_DP_L2Exit_1M3_dt200_res4'
   ! EXP_NAME= 'data_ADI_Precon_init23'
 
 
@@ -3386,7 +3386,7 @@ p_T(:,:)=0.0d0
 eps=1.e-5   !! original
 itr=1000
 niter=0
-itmn=1
+itmn=2
 exiting=.false.
 
 epa=1.e-30
@@ -3695,9 +3695,9 @@ endif
    ! read(*,*)
 
     errn=sqrt(errn)
-   ! write(*,*) niter, errn, err0
+    write(*,*) niter, errn, err0
    !read(*,*)
-    if(errn.lt.eps*err0 .and. it > itmn) exiting=.true.
+    if(niter+1 >= itmn) exiting=.true.
     if(errn.ge.errnm1) exiting=.true.
     errnm1=errn
 !if(maxval(ABS(r_HP(:,:))) .lt. eps*Exit_cond) exit

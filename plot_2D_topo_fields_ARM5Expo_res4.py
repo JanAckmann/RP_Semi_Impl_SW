@@ -35,7 +35,7 @@ path=  'data_ADI_Precon/'
 
 #path_true='../data/data_ADI_LinfPhiEXIT1M10_Dp_refInst_dt200_res8/'
 #path_ref='../data/data_ADI_LinfPhiEXIT1M10_Dp_refInst_dt200_res4/'
-pathlist= ['../data_RP_Semi_Impl_SW/sheusp_DP_L2Exit_1M3_dt200_res4/'] # '../data/data_ADI_NOTgcr_D6_2M4_RP_res4/'
+pathlist= ['../data_RP_Semi_Impl_SW/sheusp_IMPR_SP_V2_ARMExpo5_RPMP_RPAdv_FRPPreAll_FRPLap_SPr0V2_RPxAx_DP128_L2Exit_1M3_dt200_res4/'] # '../data/data_ADI_NOTgcr_D6_2M4_RP_res4/'
 #pathlist= ['../data/sheusp_IMPR_SP_L2Exit_1M3_dt200_res4_speed/'] # '../data/data_ADI_NOTgcr_D6_2M4_RP_res4/'
 
 
@@ -56,16 +56,16 @@ pathlist= ['../data_RP_Semi_Impl_SW/sheusp_DP_L2Exit_1M3_dt200_res4/'] # '../dat
 #res_diff=8
 #latitude=0 #59
 
-varlist=['H']
-var='H'
+varlist=['R']
+var='R'
 exp='3'
-codesQ='F'
-codesD='F'
+codesQ='T'
+codesD='T'
 
 res=4
 # timestep 200 seconds
-times=[0, 354]
-tprint= 797.0*200.0 # in seconds
+times=[0]
+tprint= 797.0*400.0 # in seconds
 # timestep 270 seconds
 #times=[0, 44, 88, 132, 177, 221, 265, 309, 354]
 #tprint= 797.0*(200.0/270.0)*270.0 # in seconds
@@ -76,9 +76,9 @@ new_cmap = truncate_colormap(cmap, 0.15, 1.0)
 ############## MAIN PROGRAMM ###################### 
 for path in pathlist: 
 
-    for Precon in range(7,8,5): 
+    for Precon in range(33,34,5): 
 
-        pdf_pages = PdfPages(path+'H_U_V_'+'Precon'+str(Precon)+'_exp'+str(exp)+'_codes_'+codesQ+codesD+'DP.pdf')
+        pdf_pages = PdfPages(path+'P0_'+'Precon'+str(Precon)+'_exp'+str(exp)+'_codes_'+codesQ+codesD+'DP.pdf')
         for P_steps in range(len(times)):
           time=times[P_steps]
           plotnum=0
@@ -87,32 +87,32 @@ for path in pathlist:
           for var in varlist: 
             plotnum=plotnum+1
 
-            filename =path+'Precon'+str(Precon)+'_' + var+'_exp'+str(exp)+'_time'+str(time)+'_codes_'+codesQ+codesD+'_bits'+str(23)+'.txt'
-            filename_ref =path+'Precon'+str(Precon)+'_' + var+'_exp'+str(exp)+'_time'+str(0)+'_codes_'+codesQ+codesD+'_bits'+str(23)+'.txt'
-            filenameU =path+'Precon'+str(Precon)+'_U_exp'+str(exp)+'_time'+str(time)+'_codes_'+codesQ+codesD+'_bits'+str(23)+'.txt'
-            filenameV =path+'Precon'+str(Precon)+'_V_exp'+str(exp)+'_time'+str(time)+'_codes_'+codesQ+codesD+'_bits'+str(23)+'.txt'
+            filename =path+'Precon'+str(Precon)+'_' + var+'_exp'+str(exp)+'_time'+str(time)+'_iter_0_codes_'+codesQ+codesD+'_bits'+str(23)+'.txt'
+            #filename_ref =path+'Precon'+str(Precon)+'_' + var+'_exp'+str(exp)+'_time'+str(0)+'_codes_'+codesQ+codesD+'_bits'+str(23)+'.txt'
+            #filenameU =path+'Precon'+str(Precon)+'_U_exp'+str(exp)+'_time'+str(time)+'_codes_'+codesQ+codesD+'_bits'+str(23)+'.txt'
+            #filenameV =path+'Precon'+str(Precon)+'_V_exp'+str(exp)+'_time'+str(time)+'_codes_'+codesQ+codesD+'_bits'+str(23)+'.txt'
 
             xcoord, ycoord, mean_var=np.loadtxt( filename, usecols=(0,1,2), unpack=True)
-            xcoord, ycoord, mean_varU=np.loadtxt( filenameU, usecols=(0,1,2), unpack=True)
-            xcoord, ycoord, mean_varV=np.loadtxt( filenameV, usecols=(0,1,2), unpack=True)
-            xcoord, ycoord, mean_var_ref=np.loadtxt( filename_ref, usecols=(0,1,2), unpack=True)
+            #xcoord, ycoord, mean_varU=np.loadtxt( filenameU, usecols=(0,1,2), unpack=True)
+            #xcoord, ycoord, mean_varV=np.loadtxt( filenameV, usecols=(0,1,2), unpack=True)
+            #xcoord, ycoord, mean_var_ref=np.loadtxt( filename_ref, usecols=(0,1,2), unpack=True)
 
             ncols, nrows = len(set(xcoord)), len(set(ycoord)) 
        
             grid_var = (mean_var.reshape((nrows, ncols), order='F'))
-            grid_varU = (mean_varU.reshape((nrows, ncols), order='F'))
-            grid_varV = (mean_varV.reshape((nrows, ncols), order='F'))
-            grid_var_ref = (mean_var_ref.reshape((nrows, ncols), order='F'))
+            #grid_varU = (mean_varU.reshape((nrows, ncols), order='F'))
+            #grid_varV = (mean_varV.reshape((nrows, ncols), order='F'))
+            #grid_var_ref = (mean_var_ref.reshape((nrows, ncols), order='F'))
 
             grid_xcoord= (xcoord.reshape((nrows, ncols), order='F'))
             grid_ycoord= (ycoord.reshape((nrows, ncols), order='F'))
 
 
-            if (exp == '1'):
-              grid_var=(grid_var-8000.)/8000.
-            elif (exp == '3'):
-              grid_var=(grid_var-grid_var_ref)/8000.
-              print(np.amin(grid_var),np.amax(grid_var))
+            #if (exp == '1'):
+            #  grid_var=(grid_var-8000.)/8000.
+            #elif (exp == '3'):
+            #  grid_var=(grid_var-grid_var_ref)/8000.
+            #  print(np.amin(grid_var),np.amax(grid_var))
 
             plotid='31'+str(plotnum)
             plt.subplot(plotid)
@@ -120,27 +120,9 @@ for path in pathlist:
             plt.xlabel('lon', fontsize=18)
             plt.ylabel('lat', fontsize=18)
             #if (var == 'V'):
-            if (exp == '1'):
-             plt.contour(grid_var, 11, extent=(xcoord.min(), xcoord.max(), 
+            plt.imshow(grid_var, extent=(xcoord.min(), xcoord.max(), 
                ycoord.min(), ycoord.max()),
-               interpolation='None', colors='black', vmin=np.amin((grid_var)), vmax=np.amax(grid_var))
-            elif (exp == '3'):
-             plt.contour(grid_var, 20, extent=(xcoord.min(), xcoord.max(), 
-               ycoord.min(), ycoord.max()),
-               interpolation='None', colors='black', vmin=np.amin((grid_var)), vmax=np.amax(grid_var))
-            q= plt.quiver(grid_xcoord[::16, ::16],grid_ycoord[::16, ::16], grid_varU[::16, ::16],grid_varV[::16, ::16], pivot='mid')
-            if (exp == '1'):
-              plt.quiverkey(q, 0.9, 1.05, 100, r'$100 \frac{m}{s}$', labelpos='E')
-            elif (exp == '3'):
-              plt.quiverkey(q, 0.9, 1.05, 20, r'$20 \frac{m}{s}$', labelpos='E')
-            #else:
-            #  plt.imshow(grid_var, extent=(xcoord.min(), xcoord.max(), 
-            #   ycoord.min(), ycoord.max()),
-            #   interpolation='None', cmap=new_cmap, vmin=np.amin((grid_var)), vmax=np.amax(abs(grid_var)))
-            #plt.imshow(grid, extent=(xcoord.min(), xcoord.max(), 
-            #   ycoord.min(), ycoord.max()),
-            #   interpolation='nearest', cmap=cm.bwr)
-            #plt.colorbar()
+               interpolation='None', cmap=new_cmap, vmin=np.amin((grid_var)), vmax=np.amax(abs(grid_var)))
           plt.tight_layout()
           pdf_pages.savefig(fig)
           plt.close()

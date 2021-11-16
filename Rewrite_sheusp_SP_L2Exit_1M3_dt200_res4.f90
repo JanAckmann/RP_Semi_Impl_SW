@@ -700,7 +700,7 @@ IF(IANAL.EQ.0) THEN
     endif
     !write(*,*) kt, int(float(kt)/float(mpfl))*mpfl, liner
     IPRINT=0
-    IF(KT/NPRINT*NPRINT.EQ.KT) IPRINT=1
+    IF(KT/NPRINT*NPRINT.EQ.KT .OR. KT==6376) IPRINT=1
 
     ! COMPUTE ADVECTIVE COURANT NUMBERS
     ! COMPUTE VELOCITY PREDICTOR
@@ -1079,8 +1079,8 @@ QY_old(:,:)=QY(:,:)
 
 !COMPUTE OUTPUTED FIELDS ****************************************
 
-    IF(.not. (KT/NPRINT*NPRINT.NE.KT)) then
-    
+    !IF(.not. (KT/NPRINT*NPRINT.NE.KT)) then
+    IF (KT/NPRINT*NPRINT.EQ.KT .OR. KT==6376) then
     
         DO J=1,M
           DO I=1,N

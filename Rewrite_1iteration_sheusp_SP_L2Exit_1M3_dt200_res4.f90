@@ -210,13 +210,13 @@ stencil=0
 
 
 do ID_PREC=7,7,-5
- do IRHW = 3,3,2
+ do IRHW = 1,3,2
 
   do DP_Depth=0,0,2
    write(Dp_depth_str,*) DP_Depth
 
   !ID_PREC=0
-   EXP_NAME= 'data/sheusp_SP_1iteration_L2Exit_1M3_dt200_res4'
+   EXP_NAME= 'data/sheusp_1iteration_SP_L2Exit_1M3_dt200_res4'
   ! EXP_NAME= 'data_ADI_Precon_init23'
 
 
@@ -700,7 +700,7 @@ IF(IANAL.EQ.0) THEN
     endif
     !write(*,*) kt, int(float(kt)/float(mpfl))*mpfl, liner
     IPRINT=0
-    IF(KT/NPRINT*NPRINT.EQ.KT) IPRINT=1
+    IF(KT/NPRINT*NPRINT.EQ.KT .OR. KT==6376) IPRINT=1
 
     ! COMPUTE ADVECTIVE COURANT NUMBERS
     ! COMPUTE VELOCITY PREDICTOR
@@ -1079,8 +1079,8 @@ QY_old(:,:)=QY(:,:)
 
 !COMPUTE OUTPUTED FIELDS ****************************************
 
-    IF(.not. (KT/NPRINT*NPRINT.NE.KT)) then
-    
+    !IF(.not. (KT/NPRINT*NPRINT.NE.KT)) then
+    IF (KT/NPRINT*NPRINT.EQ.KT .OR. KT==6376) then
     
         DO J=1,M
           DO I=1,N
@@ -3389,7 +3389,7 @@ lowprectime=0.0d0
 eps=1.e-5   !! original
 itr=1000
 niter=0
-itmn=2
+itmn=1
 exiting=.false.
 
 epa=1.e-30
@@ -3665,60 +3665,7 @@ do it=1,itr
 
 !!! true residual
 
-!!! true residual
-
-r_true_dp(:,:)=0.0d0
-!call laplfirst(p_true(:,:)+p_T(:,:),r_true(:,:),a11_t,a12_t,a21_t,a22_t,b11_t,b22_t, p0_true,   &
-!     &                           pfx,pfy,s,n1,n2,ip)
-
-!  CALL PRFORC_ABS(p_true(:,:)+p_T(:,:),pfx,pfy,pb,p0, &
-!       &      E1(:,:),E2(:,:),HX,HY,COR,n1,n2,IP,GC1,GC2,Alp_REL,1,1)
-!  call diver(r_true,pfx,pfy,hx,hy,s,n1,n2,ip,-1)
-  CALL PRFORC_ABS_dp(dble(p(:,:)),pfx_dp,pfy_dp,dble(pb),dble(p0), &
-       &      dble(E1(:,:)),dble(E2(:,:)),dble(HX),dble(HY),dble(COR), &
-       &      n1,n2,IP,dble(GC1),dble(GC2),dble(Alp_REL),1,1)
-  call diver_dp(r_true_dp,pfx_dp,pfy_dp,dble(hx),dble(hy),dble(s),n1,n2,ip,-1)
-  
-  DO J=1,n2
-  DO I=1,n1
-    r_true_dp(I,J)=0.5d0*r_true_dp(I,J)-(dble(p(I,J))-dble(p_true(I,J))+dble(b(I,J)))
- ! write(*,*), i, J, P(i,J)
-  enddo
-enddo
-err_true_dp=0.0
-      DO J=1,n2
-        DO I=1,n1
-         err_true_dp=err_true_dp+r_true_dp(I,J)*r_true_dp(I,J)
-        enddo
-      enddo
-    !  write(*,*) 'errn_true model view', sqrt(err_true_dp)
-   !! how well does the solver converge?
-   r_true_dp(:,:)=0.0d0
-!call laplfirst(p_true(:,:)+p_T(:,:),r_true(:,:),a11_t,a12_t,a21_t,a22_t,b11_t,b22_t, p0_true,   &
-!     &                           pfx,pfy,s,n1,n2,ip)
-
-!  CALL PRFORC_ABS(p_true(:,:)+p_T(:,:),pfx,pfy,pb,p0, &
-!       &      E1(:,:),E2(:,:),HX,HY,COR,n1,n2,IP,GC1,GC2,Alp_REL,1,1)
-!  call diver(r_true,pfx,pfy,hx,hy,s,n1,n2,ip,-1)
-  CALL PRFORC_ABS_dp(dble(p_true(:,:))+dble(p_T(:,:)),pfx_dp,pfy_dp,dble(pb),dble(p0), &
-       &      dble(E1(:,:)),dble(E2(:,:)),dble(HX),dble(HY),dble(COR), &
-       &      n1,n2,IP,dble(GC1),dble(GC2),dble(Alp_REL),1,1)
-  call diver_dp(r_true_dp,pfx_dp,pfy_dp,dble(hx),dble(hy),dble(s),n1,n2,ip,-1)
-  
-  DO J=1,n2
-  DO I=1,n1
-    r_true_dp(I,J)=0.5d0*r_true_dp(I,J)-(dble(p_T(I,J))+dble(b(I,J)))
- ! write(*,*), i, J, P(i,J)
-  enddo
-enddo
-err_true_dp=0.0
-      DO J=1,n2
-        DO I=1,n1
-         err_true_dp=err_true_dp+r_true_dp(I,J)*r_true_dp(I,J)
-        enddo
-      enddo
-     ! write(*,*) 'errn_true tendency view', sqrt(err_true_dp)
-      if (iprint==1) then
+if (iprint==1) then
         !! what is the model view on convergence, what is actually added?
 r_true_dp(:,:)=0.0d0
 !call laplfirst(p_true(:,:)+p_T(:,:),r_true(:,:),a11_t,a12_t,a21_t,a22_t,b11_t,b22_t, p0_true,   &
@@ -3744,7 +3691,7 @@ err_true_dp=0.0
          err_true_dp=err_true_dp+r_true_dp(I,J)*r_true_dp(I,J)
         enddo
       enddo
-      !write(*,*) 'errn_true model view', sqrt(err_true_dp)
+      write(*,*) 'errn_true model view', sqrt(err_true_dp)
 
     call write_residual(real(dble(p(:,:))-dble(p_true(:,:))),eps*Exit_cond, &
             & niter+1, TIME, codesQ, codes,&
@@ -3777,7 +3724,7 @@ err_true_dp=0.0
          err_true_dp=err_true_dp+r_true_dp(I,J)*r_true_dp(I,J)
         enddo
       enddo
-     ! write(*,*) 'errn_true tendency view', sqrt(err_true_dp)
+      write(*,*) 'errn_true tendency view', sqrt(err_true_dp)
 !!! end true residual
 
     call write_residual(real(p_T),eps*Exit_cond, &
@@ -3804,10 +3751,10 @@ endif
    ! read(*,*)
 
     errn=sqrt(errn)
-   write(*,*) niter, errn, err0
-    if( niter+2 > itmn) exiting=.true.
+    write(*,*) niter, errn, err0
+   !read(*,*)
+    if(niter+1 >= itmn) exiting=.true.
     if(errn.ge.errnm1) exiting=.true.
-    !exiting=.true.  ! one iteration
     errnm1=errn
 !if(maxval(ABS(r_HP(:,:))) .lt. eps*Exit_cond) exit
 

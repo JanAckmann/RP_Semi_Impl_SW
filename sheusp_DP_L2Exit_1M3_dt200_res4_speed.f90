@@ -209,7 +209,7 @@ stencil=0
 
 
 do ID_PREC=7,7,-5
- do IRHW = 1,3,2
+ do IRHW = 3,1,-2
 
   do DP_Depth=0,0,2
    write(Dp_depth_str,*) DP_Depth

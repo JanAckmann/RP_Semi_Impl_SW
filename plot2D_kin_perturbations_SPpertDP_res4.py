@@ -36,9 +36,9 @@ path=  'data_ADI_Precon/'
 #path_true='../data/data_ADI_LinfPhiEXIT1M10_Dp_refInst_dt200_res8/'
 #path_ref='../data/data_ADI_LinfPhiEXIT1M10_Dp_refInst_dt200_res4/'
 #pathlist= ['../data/sheusp_DP_L2Exit_1M3_dt200_res4/'] # '../data/data_ADI_NOTgcr_D6_2M4_RP_res4/'
-pathlist= ['../data_RP_Semi_Impl_SW/sheusp_IMPR_SP_FRPPreAll_FRPLap_SPr0V2_RPxAx_DP3_L2Exit_1M3_dt200_res4/'] # '../data/data_ADI_NOTgcr_D6_2M4_RP_res4/'
-codesQ='T'
-codesD='T'
+pathlist= ['../data_RP_Semi_Impl_SW/sheusp_SP_L2Exit_1M3_dt200_res4/'] # '../data/data_ADI_NOTgcr_D6_2M4_RP_res4/'
+codesQ='F'
+codesD='F'
 #pathlist= ['../data/sheusp_SP_1iteration_L2Exit_1M3_dt200_res4/'] # '../data/data_ADI_NOTgcr_D6_2M4_RP_res4/'
 #pathlist= ['../data/sheusp_IMPR_SP_L2Exit_1M3_dt200_res4/'] # '../data/data_ADI_NOTgcr_D6_2M4_RP_res4/'
 path_ref='../data_RP_Semi_Impl_SW/sheusp_DP_L2Exit_1M3_dt200_res4/'
@@ -208,7 +208,7 @@ for path in pathlist:
               interpolation='nearest', cmap=cm.jet)
     clb=plt.colorbar(shrink=0.7)
     clb.set_label(r'$\frac{m}{s}$',fontsize=18, rotation=0)
-    plt.savefig('kinetic'+str(exp)+'_pertDP.png')
+    plt.savefig('kinetic'+str(exp)+'_SPpertDP.png')
     plt.close()
 
     
@@ -259,7 +259,10 @@ for path in pathlist:
     ycoord[:]=ycoord[:]/np.pi
     kinetic_ref=abs(kinetic-np.sqrt(kinetic_ref))
     kinetic_gen_ref=abs(kinetic_ref-np.sqrt(kinetic_gen_ref))
-    maximum=100#(max2D(kinetic_ref, ncols, nrows)) #, max2D(kinetic_gen, ncols, nrows))
+    if (str(exp)=='3'):
+        maximum=100#(max2D(kinetic_ref, ncols, nrows)) #, max2D(kinetic_gen, ncols, nrows))
+    else:
+        maximum=1
     plt.xlabel('x/Pi', fontsize=15)
     plt.ylabel('y/Pi', fontsize=15)
 
@@ -268,6 +271,6 @@ for path in pathlist:
               interpolation='nearest', norm=matplotlib.colors.LogNorm(),  cmap=cm.jet)
     clb=plt.colorbar(shrink=0.7)
     clb.set_label(r'$\frac{m}{s}$',fontsize=18, rotation=0)
-    plt.savefig('kinetic_diff'+str(exp)+'_pertDP.png')
+    plt.savefig('kinetic_diff'+str(exp)+'_SPpertDP.png')
     plt.close()
 

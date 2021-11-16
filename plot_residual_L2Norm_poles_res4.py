@@ -19,15 +19,16 @@ from matplotlib.ticker import MaxNLocator
 #path='../data/sheusp_IMPR_SP_RPGCR_Prec_DP16_L2Exit_1M3_dt200_res4/'
 #path='../data/sheusp_IMPR_SP_RPPreAll_RPLap_FullSPr0_DP0_L2Exit_1M3_dt200_res4/'
 #path='../data/sheusp_IMPR_SP_FRPPreAll_FRPLap_SPr0_DP2_L2Exit_1M3_dt200_res4/' # no single precision left in precon
+
 #path='../data/sheusp_IMPR_SP_FRPPreAll_FRPLap_SPr0V2_RPxAx_DP3_L2Exit_1M3_dt200_res4/' # + reduced precisision in conjugacy 
 #path='../data/sheusp_IMPR_SP_FRPPreAll_FRPLap_SPr0V2_DP4_L2Exit_1M3_dt200_res4/' # + reduced precisision in conjugacy 
 #path='../data/sheusp_IMPR_SP_plusLat_L2Exit_1M3_dt200_res4/'
 #Precon='23'
 #codesD='T'
 #codesQ='F'
-#path='../data/sheusp_DP_L2Exit_1M3_dt200_res4/'
+path='../data/sheusp_DP_L2Exit_1M3_dt200_res4/'
 #path='../data/degraded_sheusp_DP_L2Exit_1M3_dt200_res4/'
-path='../data/sheusp_SP_L2Exit_1M3_dt200_res4/'
+#path='../data/sheusp_SP_L2Exit_1M3_dt200_res4/'
 #path='../data/CrazyAbsorb_sheusp_SP_L2Exit_1M3_dt200_res4/'
 #path='../data/sheusp_SP_L2Exit_1M3_dt200_noabsorb_res4/'
 #path='../data/sheusp_SP_L2Exit_1M3_dt200_LAbsorb_res4/'
@@ -150,7 +151,10 @@ for exp in explist:
           #xcoord, ycoord, Residuum_re, exitcon   =np.loadtxt( filenameT_re, usecols=(0,1,2,3), unpack=True)
           #xcoord, ycoord, mean_varF     =np.loadtxt( filenameF, usecols=(0,1,2), unpack=True)
 
-          residuum_norm[iteration]= np.sqrt(np.sum (Residuum**2)) #np.mean (np.abs(Residuum))#np.linalg.norm (Residuum)
+          ncols, nrows = len(set(xcoord)), len(set(ycoord))
+
+          grid_Residuum = (Residuum.reshape((nrows, ncols), order='F'))
+          residuum_norm[iteration]= np.sqrt(np.sum (grid_Residuum[0:10,:]**2)+np.sum (grid_Residuum[256-10:256,:]**2)) # np.sqrt(np.sum (Residuum**2)) #np.mean (np.abs(Residuum))#np.linalg.norm (Residuum)
           print(residuum_norm[iteration]/residuum_norm[0])
           residuum_infnorm[iteration]=np.max (np.abs(Residuum)) #np.linalg.norm (Residuum , np.inf)
           #print(residuum_norm[iteration], np.sqrt(np.mean (Residuum_re**2)), (np.sqrt(np.mean (Residuum_re**2))-residuum_norm[iteration] )/residuum_norm[iteration])
@@ -189,10 +193,10 @@ for exp in explist:
   
     #print( plotpath +'L2_Precon'+Precon+'_' + var+'_exp'+exp+'_codes_FF'+'_bits'+str(bits)+'.pdf')
 
-    plt.savefig(plotpath +'Norm_true_Errors_Precon'+Precon+'_' + var+'_exp'+exp+'_codes_'+str(codesD)+str(codesQ)+'_bits'+str(bits)+'L2norm.pdf', bbox_inches=0)
+    plt.savefig(plotpath +'Norm_true_Errors_Precon'+Precon+'_' + var+'_exp'+exp+'_codes_'+str(codesD)+str(codesQ)+'_bits'+str(bits)+'L2norm_poles.pdf', bbox_inches=0)
     plt.close()
   
-    print( plotpath +'Norm_Errors_Precon'+Precon+'_' + var+'_exp'+exp+'_codes_'+str(codesD)+str(codesQ)+'_bits'+str(bits)+'L2norm.pdf')
+    print( plotpath +'Norm_Errors_Precon'+Precon+'_' + var+'_exp'+exp+'_codes_'+str(codesD)+str(codesQ)+'_bits'+str(bits)+'L2norm_poles.pdf')
 
 
 #compare_histograms_normal('h', 31, sigma_h) #, -0.0526478751975,0.0526478751975 )
